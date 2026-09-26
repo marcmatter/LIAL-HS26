@@ -16,6 +16,7 @@ import {
 } from "@/lib/linalg/rowOps";
 import { challengeStars, recordChallenge, useProgress } from "@/lib/game/progress";
 import { gaussPresetGroups } from "@/tools/data/gaussPresets";
+import MatrixGridEditor from "@/components/matrix-editor/MatrixGridEditor";
 import FactorInput, { type Factor, type FactorField } from "./FactorInput";
 import Value, { formatValue, type DisplayMode } from "./Value";
 
@@ -62,8 +63,8 @@ const Kbd = ({ children }: { children: string }) => (
 export default function GaussTool() {
   const [sourceId, setSourceId] = useState(initial.id);
   const [editorOpen, setEditorOpen] = useState(false);
-  const [text, setText] = useState(initial.text);
-  const [parseError, setParseError] = useState<string | null>(null);
+  // Remounts the editor (fresh copy of the current matrix) every time it opens.
+  const [editorKey, setEditorKey] = useState(0);
 
   const [base, setBase] = useState<FracMatrix>(initialMatrix);
   const [timeline, setTimeline] = useState<RowOp[]>([]);
@@ -98,24 +99,21 @@ export default function GaussTool() {
 
   // ---- loading ---------------------------------------------------------------
 
-  function load(source: string, id: string) {
-    const parsed = parseMatrixText(source);
-    if ("error" in parsed) {
-      setParseError(parsed.error);
-      return false;
-    }
-    setParseError(null);
+  function loadMatrix(m: FracMatrix, id: string, augmented = true) {
     setSourceId(id);
-    setText(cleanText(source));
-    setBase(parsed.matrix);
+    setBase(m);
     setTimeline([]);
     setCursor(0);
-    setFactors(parsed.matrix.map(() => ONE));
+    setFactors(m.map(() => ONE));
     setPending(null);
     setMessage(null);
     setFlash({ rows: [], id: 0 });
-    setDivider(autoDivider(parsed.matrix));
-    return true;
+    setDivider(augmented ? autoDivider(m) : null);
+  }
+
+  function openEditor(open: boolean) {
+    if (open) setEditorKey((k) => k + 1);
+    setEditorOpen(open);
   }
 
   // ---- operations ------------------------------------------------------------
@@ -247,11 +245,12 @@ export default function GaussTool() {
               value={sourceId}
               onChange={(e) => {
                 const preset = presets.find((p) => p.id === e.target.value);
-                if (preset) {
-                  load(preset.text, preset.id);
-                  setEditorOpen(false);
+                const parsed = preset && parseMatrixText(preset.text);
+                if (parsed && "matrix" in parsed) {
+                  loadMatrix(parsed.matrix, preset.id);
+                  openEditor(false);
                 } else {
-                  setEditorOpen(true);
+                  openEditor(true);
                 }
               }}
             >
@@ -269,8 +268,13 @@ export default function GaussTool() {
               <option value={CUSTOM}>Custom…</option>
             </select>
           </label>
-          <button type="button" className={`${btn} h-9`} aria-expanded={editorOpen} onClick={() => setEditorOpen(!editorOpen)}>
-            {editorOpen ? "Close editor" : "Edit matrix"}
+          <button
+            type="button"
+            className={`${btn} h-9 ${editorOpen ? "border-accent" : ""}`}
+            aria-expanded={editorOpen}
+            onClick={() => openEditor(!editorOpen)}
+          >
+            ✎ {editorOpen ? "Close editor" : "Enter your own matrix"}
           </button>
 
           <div className="ml-auto flex flex-wrap items-end gap-3">
@@ -310,35 +314,19 @@ export default function GaussTool() {
         </div>
 
         {editorOpen && (
-          <div className="flex flex-col gap-2 border-t border-border pt-3">
-            <label htmlFor="gauss-input" className="text-sm text-muted">
-              One row per line, entries separated by spaces. Decimals and fractions like <code>-3/4</code> are allowed.
-            </label>
-            <textarea
-              id="gauss-input"
-              rows={Math.min(8, Math.max(3, text.split("\n").length + 1))}
-              spellCheck={false}
-              className="w-full rounded-md border border-border bg-surface p-3 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-accent"
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && (e.ctrlKey || e.metaKey) && load(text, CUSTOM)) setEditorOpen(false);
+          <div className="border-t border-border pt-4">
+            <MatrixGridEditor
+              key={editorKey}
+              initial={base.map((row) => row.map(String))}
+              initialAugmented={divider !== null}
+              current={cursor > 0 ? matrix.map((row) => row.map(String)) : undefined}
+              submitLabel="Load into workspace"
+              onSubmit={(m, augmented) => {
+                loadMatrix(m, CUSTOM, augmented);
+                openEditor(false);
               }}
+              onCancel={() => openEditor(false)}
             />
-            <div className="flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                className={`${btn} border-accent bg-accent text-accent-contrast hover:opacity-90`}
-                onClick={() => load(text, CUSTOM) && setEditorOpen(false)}
-              >
-                Load matrix
-              </button>
-              <button type="button" className={btn} onClick={() => setText(matrixToText(matrix))}>
-                Use current matrix
-              </button>
-              <Kbd>Ctrl ↵</Kbd>
-              {parseError && <span className="text-sm text-danger">{parseError}</span>}
-            </div>
           </div>
         )}
       </div>

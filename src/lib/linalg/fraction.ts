@@ -22,11 +22,13 @@ export class Fraction {
   }
 
   /**
-   * Parses "3", "-2.5", "1e-3", "1/3" or "-0.5/1.5". Commas are accepted as
-   * decimal separators. Returns null for anything else (or a zero denominator).
+   * Parses "3", "-2.5", "−2", "1e-3", "1/3" or "-0.5/1.5". Commas are accepted as
+   * decimal separators and typographic minus signs as "-". Returns null for anything else (or a zero denominator).
    */
   static parse(raw: string): Fraction | null {
-    const s = raw.trim().replace(",", ".");
+    // Accept typographic minus signs (−, –, —, as produced by phones and copied text)
+    // and a decimal comma.
+    const s = raw.trim().replace(/[\u2212\u2012\u2013\u2014\uFE63\uFF0D]/g, "-").replace(",", ".");
     if (s === "") return null;
     const slash = s.indexOf("/");
     if (slash === -1) return parseDecimal(s);
