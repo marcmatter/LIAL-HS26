@@ -10,6 +10,13 @@
   --accent-contrast: #ffffff;
   --success: #15803d;
   --danger: #dc2626;
+  --grid: #e7e7ea;
+  --axis-x: #dc2626;
+  --axis-y: #16a34a;
+  --axis-z: #2563eb;
+  --vec-a: #ea580c;
+  --vec-b: #0891b2;
+  --vec-res: #7c3aed;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -23,6 +30,13 @@
     --accent-contrast: #0a0a0a;
     --success: #4ade80;
     --danger: #f87171;
+    --grid: #232327;
+    --axis-x: #f87171;
+    --axis-y: #4ade80;
+    --axis-z: #60a5fa;
+    --vec-a: #fb923c;
+    --vec-b: #22d3ee;
+    --vec-res: #c084fc;
   }
 }
 
@@ -36,6 +50,12 @@
   --color-accent-contrast: var(--accent-contrast);
   --color-success: var(--success);
   --color-danger: var(--danger);
+  --color-axis-x: var(--axis-x);
+  --color-axis-y: var(--axis-y);
+  --color-axis-z: var(--axis-z);
+  --color-vec-a: var(--vec-a);
+  --color-vec-b: var(--vec-b);
+  --color-vec-res: var(--vec-res);
   --animate-flash: flash 0.9s ease-out;
 
   @keyframes flash {
