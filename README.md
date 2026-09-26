@@ -24,23 +24,29 @@ Open [http://localhost:3000](http://localhost:3000).
 ```
 src/
   app/                   Routes (home page lists tools, /tools/[slug] renders one)
-  components/            Shared UI (MatrixInput, SizeSelector, header)
-  lib/linalg/            Pure math helpers (matrix types, determinant, parsing)
+  components/            Shared UI (MatrixInput, SizeSelector, Scene3D, header)
+  lib/linalg/            Pure math helpers (matrices, vectors, fractions, row operations)
   tools/
     registry.ts          List of all tools
     components/          One component per tool
 ```
 
+## Tools
+
+- **Vector & Matrix Operations (3D)** — vector addition, scalar multiplication, linear
+  combinations and the dot product; matrix × vector (as a combination of columns and as a
+  transformation of space); matrix addition and scalar multiplication. Every result is
+  computed step by step and drawn in a rotatable 3D (or 2D) view.
+- **Determinant**
+- **Gauss-Jordan (interactive)** — row-reduce with your own row operations, exact fractions.
+
 ## Adding a tool
 
-1. Create a client component in `src/tools/components/`, e.g. `InverseTool.tsx`.
-   Reuse `MatrixInput` and helpers from `src/lib/linalg/`.
-2. Register it in `src/tools/registry.ts` — either add a new entry or set
-   `component` on an existing placeholder (entries without a component are shown
-   as "Soon").
+1. Create a client component in `src/tools/components/`.
+   Reuse `MatrixInput`, `Scene3D` and the helpers from `src/lib/linalg/`.
+2. Register it in `src/tools/registry.ts`.
 
 The tool page at `/tools/<slug>` and the home page card are generated automatically.
-`src/tools/components/DeterminantTool.tsx` is a complete example.
 
 ## Deployment
 

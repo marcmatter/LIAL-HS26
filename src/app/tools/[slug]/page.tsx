@@ -29,13 +29,7 @@ export default async function ToolPage({ params }: PageProps<"/tools/[slug]">) {
         <h1 className="text-3xl font-bold tracking-tight">{tool.title}</h1>
         <p className="mt-2 text-muted">{tool.description}</p>
       </header>
-      {ToolComponent ? (
-        <ToolComponent />
-      ) : (
-        <div className="rounded-lg border border-dashed border-border p-8 text-center text-muted">
-          This tool is coming soon.
-        </div>
-      )}
+      <ToolComponent />
     </div>
   );
 }

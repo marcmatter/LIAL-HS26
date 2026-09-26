@@ -1,8 +1,9 @@
 import type { ComponentType } from "react";
 import DeterminantTool from "./components/DeterminantTool";
 import GaussTool from "./components/gauss/GaussTool";
+import OperationsTool from "./components/operations/OperationsTool";
 
-export type ToolCategory = "Matrices" | "Vectors" | "Systems" | "Spaces";
+export type ToolCategory = "Vectors & Matrices" | "Systems";
 
 export interface Tool {
   /** URL segment: the tool is served at /tools/<slug>. */
@@ -10,34 +11,28 @@ export interface Tool {
   title: string;
   description: string;
   category: ToolCategory;
-  /** Leave undefined for tools that are planned but not built yet. */
-  component?: ComponentType;
+  component: ComponentType;
 }
 
 /**
  * Every tool in the app. To add one:
  *   1. Create a component in src/tools/components/
- *   2. Add an entry here (or set `component` on an existing placeholder)
+ *   2. Add an entry here
  */
 export const tools: Tool[] = [
+  {
+    slug: "operations",
+    title: "Vector & Matrix Operations (3D)",
+    description: "Add, scale and multiply vectors and matrices step by step — and see what each operation does in 3D.",
+    category: "Vectors & Matrices",
+    component: OperationsTool,
+  },
   {
     slug: "determinant",
     title: "Determinant",
     description: "Compute the determinant of a square matrix.",
-    category: "Matrices",
+    category: "Vectors & Matrices",
     component: DeterminantTool,
-  },
-  {
-    slug: "matrix-operations",
-    title: "Matrix Operations",
-    description: "Add, subtract and multiply matrices.",
-    category: "Matrices",
-  },
-  {
-    slug: "inverse",
-    title: "Inverse",
-    description: "Find the inverse of an invertible matrix.",
-    category: "Matrices",
   },
   {
     slug: "gaussian-elimination",
@@ -45,30 +40,6 @@ export const tools: Tool[] = [
     description: "Row-reduce a matrix step by step with your own row operations, with undo and redo.",
     category: "Systems",
     component: GaussTool,
-  },
-  {
-    slug: "linear-systems",
-    title: "Linear Systems",
-    description: "Solve Ax = b and describe the solution set.",
-    category: "Systems",
-  },
-  {
-    slug: "vector-operations",
-    title: "Vector Operations",
-    description: "Dot product, cross product, norms and angles.",
-    category: "Vectors",
-  },
-  {
-    slug: "eigenvalues",
-    title: "Eigenvalues & Eigenvectors",
-    description: "Compute eigenvalues and eigenvectors of a square matrix.",
-    category: "Spaces",
-  },
-  {
-    slug: "subspaces",
-    title: "Rank, Kernel & Image",
-    description: "Find rank, a basis of the null space and column space.",
-    category: "Spaces",
   },
 ];
 
