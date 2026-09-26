@@ -58,6 +58,33 @@
   --color-vec-res: var(--vec-res);
   --animate-flash: flash 0.9s ease-out;
 
+  --animate-pop: pop 0.35s cubic-bezier(0.2, 1.4, 0.4, 1);
+  --animate-shake: shake 0.4s ease-in-out;
+
+  @keyframes pop {
+    0% {
+      transform: scale(0.6);
+      opacity: 0;
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+  @keyframes shake {
+    0%,
+    100% {
+      transform: translateX(0);
+    }
+    25% {
+      transform: translateX(-6px);
+    }
+    75% {
+      transform: translateX(6px);
+    }
+  }
+
   @keyframes flash {
     0% {
       background-color: color-mix(in srgb, var(--accent) 30%, transparent);
@@ -73,4 +100,12 @@
 body {
   background: var(--background);
   color: var(--foreground);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-pop,
+  .animate-shake,
+  .animate-flash {
+    animation: none;
+  }
 }

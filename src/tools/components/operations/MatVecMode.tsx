@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { SceneObject } from "@/components/scene3d/Scene3D";
+import { awardBadge } from "@/lib/game/progress";
 import { determinant, type Matrix } from "@/lib/linalg/matrix";
 import { column, lerpFromIdentity, matVec, scale, to3, add, type Vec3 } from "@/lib/linalg/vector";
 import Workspace from "./Workspace";
@@ -119,6 +120,12 @@ export default function MatVecMode() {
   const is3d = picture === "columns" ? rows === 3 : rows === 3 || cols === 3;
   const det = valid && square ? determinant(Am) : null;
 
+  // Discovery badge: a matrix that squashes space flat, seen as a transformation.
+  const flat = picture === "transform" && det !== null && Math.abs(det) < 1e-9;
+  useEffect(() => {
+    if (flat) awardBadge("flatland");
+  }, [flat]);
+
   // ---- scene ----
   const objects: SceneObject[] = [];
   if (valid && Ax) {
@@ -178,6 +185,7 @@ export default function MatVecMode() {
           onClick={() => {
             setT(0);
             setPlaying(true);
+            awardBadge("transformer");
           }}
         >
           ▶ Animate

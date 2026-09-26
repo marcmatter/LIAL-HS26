@@ -33,6 +33,10 @@ src/
 
 ## Tools
 
+- **Practice Arena** — endless generated exercises for the SW01 topics (vector addition,
+  linear combinations, dot product, length, matrix addition, matrix × vector, determinant,
+  linear systems) with instant checking, hints and worked solutions. Difficulty adapts to
+  your mastery; each topic also has a 60-second sprint.
 - **Vector & Matrix Operations (3D)** — vector addition, scalar multiplication, linear
   combinations and the dot product; matrix × vector (as a combination of columns and as a
   transformation of space); matrix addition and scalar multiplication. Every result is
@@ -47,6 +51,19 @@ src/
 2. Register it in `src/tools/registry.ts`.
 
 The tool page at `/tools/<slug>` and the home page card are generated automatically.
+
+## Gamification
+
+Progress lives in the browser (`src/lib/game/progress.ts`, localStorage — no account, works
+offline, per device):
+
+- **XP and levels** (Scalar → Vector → … → Vector-Space Master) for correct answers, with
+  a bonus for first-try streaks and half points when a hint was used.
+- **Mastery stars** per topic (3 / 8 / 15 correct), which also raise the difficulty.
+- **Daily streak** and **badges** (`src/lib/game/badges.ts`), including discovery badges in
+  the 3D tool (orthogonal vectors, a flattening matrix, watching a transformation).
+- **Gauss-Jordan challenge**: every matrix has a *par* (the steps of a standard
+  Gauss-Jordan elimination); reaching reduced row echelon form earns 1–3 stars.
 
 ## Offline use (PWA)
 

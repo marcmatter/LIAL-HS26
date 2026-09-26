@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import SiteHeader from "@/components/SiteHeader";
 import PwaStatus from "@/components/pwa/PwaStatus";
+import RewardToasts from "@/components/game/RewardToasts";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -29,6 +30,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="en" className="h-full antialiased">
       <body className="min-h-full flex flex-col font-sans">
         <SiteHeader />
+        <RewardToasts />
         <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-10">{children}</main>
         <footer className="border-t border-border">
           <div className="mx-auto max-w-5xl px-4 py-4 text-xs text-muted">

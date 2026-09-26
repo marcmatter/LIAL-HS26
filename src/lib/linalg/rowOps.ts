@@ -139,3 +139,35 @@ export function analyseEchelon(m: FracMatrix, divider: number | null): EchelonIn
 
   return { pivots, contradictions, isRowEchelon, isReduced };
 }
+
+/**
+ * Number of row operations a straightforward Gauss-Jordan elimination needs to
+ * reach reduced row echelon form (on the columns before `divider`): one swap per
+ * missing pivot, one operation per entry eliminated above or below a pivot and
+ * one scaling per pivot that is not already 1. Used as "par" for challenges.
+ */
+export function referenceSteps(start: FracMatrix, divider: number | null): number {
+  let m = start;
+  const coeffCols = divider ?? m[0]?.length ?? 0;
+  let steps = 0;
+  let r = 0;
+  for (let c = 0; c < coeffCols && r < m.length; c++) {
+    const p = m.findIndex((row, i) => i >= r && !row[c].isZero());
+    if (p === -1) continue;
+    if (p !== r) {
+      m = applyRowOp(m, { type: "swap", row1: r, row2: p });
+      steps++;
+    }
+    for (let i = 0; i < m.length; i++) {
+      if (i === r || m[i][c].isZero()) continue;
+      m = applyRowOp(m, { type: "sub", factor1: m[r][c], row1: i, factor2: m[i][c], row2: r });
+      steps++;
+    }
+    if (!m[r][c].isOne()) {
+      m = applyRowOp(m, { type: "mul", factor: Fraction.ONE.div(m[r][c]), row: r });
+      steps++;
+    }
+    r++;
+  }
+  return steps;
+}
