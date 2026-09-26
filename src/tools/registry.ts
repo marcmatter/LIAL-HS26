@@ -1,5 +1,6 @@
 import type { ComponentType } from "react";
 import DeterminantTool from "./components/DeterminantTool";
+import GaussTool from "./components/GaussTool";
 
 export type ToolCategory = "Matrices" | "Vectors" | "Systems" | "Spaces";
 
@@ -40,9 +41,10 @@ export const tools: Tool[] = [
   },
   {
     slug: "gaussian-elimination",
-    title: "Gaussian Elimination",
-    description: "Row-reduce a matrix to (reduced) row echelon form step by step.",
+    title: "Gauss-Jordan (interactive)",
+    description: "Row-reduce a matrix step by step with your own row operations, with undo and redo.",
     category: "Systems",
+    component: GaussTool,
   },
   {
     slug: "linear-systems",
