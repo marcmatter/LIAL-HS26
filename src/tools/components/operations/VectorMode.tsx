@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { awardBadge } from "@/lib/game/progress";
 import type { SceneObject } from "@/components/scene3d/Scene3D";
 import { add, angle, dot, norm, scale, sub, to3, type Vec3 } from "@/lib/linalg/vector";
 import Workspace from "./Workspace";
@@ -89,6 +90,12 @@ export default function VectorMode() {
   const l = parseNum(lambda);
   const m = parseNum(mu);
   const valid = av && bv && l !== null && m !== null;
+
+  // Discovery badge: two non-zero vectors with a • b = 0.
+  const orthogonal = !!valid && op === "dot" && norm(av) > 0 && norm(bv) > 0 && Math.abs(dot(av, bv)) < 1e-9;
+  useEffect(() => {
+    if (orthogonal) awardBadge("right-angle");
+  }, [orthogonal]);
 
   const usesB = op !== "scale";
   const usesLambda = op === "scale" || op === "lincomb";

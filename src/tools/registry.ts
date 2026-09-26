@@ -2,8 +2,9 @@ import type { ComponentType } from "react";
 import DeterminantTool from "./components/DeterminantTool";
 import GaussTool from "./components/gauss/GaussTool";
 import OperationsTool from "./components/operations/OperationsTool";
+import PracticeTool from "./components/practice/PracticeTool";
 
-export type ToolCategory = "Vectors & Matrices" | "Systems";
+export type ToolCategory = "Practice" | "Vectors & Matrices" | "Systems";
 
 export interface Tool {
   /** URL segment: the tool is served at /tools/<slug>. */
@@ -20,6 +21,13 @@ export interface Tool {
  *   2. Add an entry here
  */
 export const tools: Tool[] = [
+  {
+    slug: "practice",
+    title: "Practice Arena",
+    description: "Endless exercises with instant feedback, worked solutions, XP, streaks, sprints and badges.",
+    category: "Practice",
+    component: PracticeTool,
+  },
   {
     slug: "operations",
     title: "Vector & Matrix Operations (3D)",

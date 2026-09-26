@@ -1,8 +1,9 @@
 import Link from "next/link";
+import PlayerCard from "@/components/game/PlayerCard";
 import InstallApp from "@/components/pwa/InstallApp";
 import { tools, type ToolCategory } from "@/tools/registry";
 
-const categories: ToolCategory[] = ["Vectors & Matrices", "Systems"];
+const categories: ToolCategory[] = ["Practice", "Vectors & Matrices", "Systems"];
 
 export default function Home() {
   return (
@@ -11,6 +12,8 @@ export default function Home() {
         <h1 className="text-3xl font-bold tracking-tight">Linear Algebra Tools</h1>
         <p className="mt-2 text-muted">Interactive helper tools for the Linear Algebra course (LIAL).</p>
       </section>
+
+      <PlayerCard compact />
 
       <InstallApp />
 

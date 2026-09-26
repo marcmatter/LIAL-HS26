@@ -10,9 +10,11 @@ import {
   describeRowOp,
   matrixToText,
   parseMatrixText,
+  referenceSteps,
   type FracMatrix,
   type RowOp,
 } from "@/lib/linalg/rowOps";
+import { challengeStars, recordChallenge, useProgress } from "@/lib/game/progress";
 import { gaussPresetGroups } from "@/tools/data/gaussPresets";
 import FactorInput, { type Factor, type FactorField } from "./FactorInput";
 import Value, { formatValue, type DisplayMode } from "./Value";
@@ -80,6 +82,17 @@ export default function GaussTool() {
 
   const matrix = useMemo(() => applyRowOps(base, timeline.slice(0, cursor)), [base, timeline, cursor]);
   const info = useMemo(() => analyseEchelon(matrix, divider), [matrix, divider]);
+
+  // Challenge: reach reduced row echelon form in as few steps as possible.
+  const progress = useProgress();
+  const par = useMemo(() => referenceSteps(base, divider), [base, divider]);
+  const challengeKey = `gauss:${matrixToText(base)}|${divider ?? "-"}`;
+  const bestStars = progress.challenges[challengeKey] ?? 0;
+  const solved = info.isReduced && cursor > 0;
+  const stars = solved ? challengeStars(cursor, par) : 0;
+  useEffect(() => {
+    if (solved) recordChallenge(challengeKey, cursor, par);
+  }, [solved, challengeKey, cursor, par]);
   const cols = matrix[0]?.length ?? 0;
   const fmt = (f: Fraction) => formatValue(f, mode);
 
@@ -345,6 +358,43 @@ export default function GaussTool() {
             </span>
           )}
         </div>
+
+        {solved ? (
+          <div className="flex flex-wrap items-center gap-3 rounded-lg border border-success/40 bg-success/10 px-3 py-2 text-sm">
+            <span className="text-2xl tracking-tight text-success" aria-label={`${stars} of 3 stars`}>
+              {"★".repeat(stars)}
+              <span className="opacity-30">{"★".repeat(3 - stars)}</span>
+            </span>
+            <span className="flex-1">
+              <strong>Challenge solved</strong> in {cursor} {cursor === 1 ? "step" : "steps"} (par {par}).{" "}
+              {stars === 3 ? "Perfect — within par!" : `Solve it in ${stars === 2 ? par : par + 2} steps or fewer for ${stars === 2 ? "★★★" : "★★"}.`}
+            </span>
+            {stars < 3 && (
+              <button type="button" className={btn} onClick={() => jumpTo(0)}>
+                Try again
+              </button>
+            )}
+          </div>
+        ) : (
+          par > 0 && (
+            <p className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-lg border border-border px-3 py-2 text-sm text-muted">
+              <span>
+                🎯 <strong className="text-foreground">Challenge:</strong> reach the reduced row echelon form
+              </span>
+              <span>
+                Par <strong className="font-mono text-foreground">{par}</strong>
+              </span>
+              <span>
+                Your steps <strong className="font-mono text-foreground">{cursor}</strong>
+              </span>
+              <span title="Best result for this matrix">
+                Best{" "}
+                <span className="text-accent">{"★".repeat(bestStars)}</span>
+                <span className="opacity-40">{"☆".repeat(3 - bestStars)}</span>
+              </span>
+            </p>
+          )
+        )}
 
         <p
           aria-live="polite"
