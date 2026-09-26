@@ -48,6 +48,23 @@ src/
 
 The tool page at `/tools/<slug>` and the home page card are generated automatically.
 
+## Offline use (PWA)
+
+The app is an installable Progressive Web App. The start page has an **Install app** button:
+it opens the browser's install dialog where supported (Chrome, Edge, Android), shows the
+Share → "Add to Home Screen" steps on iPhone/iPad, and is hidden when the app is already installed.
+
+- **Offline:** on the first visit the service worker (`src/app/sw.js/route.ts`) saves every
+  tool page plus its JS/CSS. All tools then work without internet.
+- **Updates:** every build gets a new version (`NEXT_PUBLIC_APP_VERSION`, set in
+  `next.config.ts`) that is baked into `/sw.js`. Whenever the device comes back online,
+  returns to the app, or once an hour, the app checks for a new version and downloads it
+  in the background, including any newly added tools. The start page reloads itself; on a tool
+  page a "Reload" prompt appears so no input is lost. The footer shows the version and
+  a "Check for updates" button.
+- New tools are cached automatically: the page list comes from `src/tools/registry.ts`.
+- The service worker is only registered in production builds (`npm run build && npm run start`).
+
 ## Deployment
 
 The app is ready for [Vercel](https://vercel.com/new): import this GitHub repository
