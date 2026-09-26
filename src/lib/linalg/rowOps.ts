@@ -69,14 +69,35 @@ export function describeRowOp(op: RowOp, format: (f: Fraction) => string = Strin
 }
 
 /**
- * Parses a whitespace-separated matrix, one row per line.
+ * Splits pasted or typed matrix text into cells. Understands
+ * - whitespace, tab (spreadsheets) or semicolon separated rows, one row per line
+ * - Python / NumPy style: [[2, -3], [5, -7]] or array([[2, -3], [5, -7]])
+ * Commas separate entries only in bracket notation; otherwise "1,5" is a decimal.
+ */
+export function tokenizeMatrix(text: string): string[][] {
+  let t = text.trim();
+  const bracketed = t.includes("[");
+  if (bracketed) {
+    t = t
+      .replace(/^[a-zA-Z_.]*\(/, "")
+      .replace(/\)\s*$/, "")
+      .replace(/\]\s*,?\s*\[/g, "\n")
+      .replace(/[[\]]/g, "");
+  }
+  const separator = bracketed ? /[\s,;]+/ : /[\s;]+/;
+  return t
+    .split(/\r?\n/)
+    .map((line) => line.trim().split(separator).filter(Boolean))
+    .filter((row) => row.length > 0);
+}
+
+/**
+ * Parses matrix text (see tokenizeMatrix) into exact fractions.
  * Short rows are padded with zeros. Entries may be decimals or fractions like "1/3".
  */
 export function parseMatrixText(text: string): { matrix: FracMatrix } | { error: string } {
   const rows: Fraction[][] = [];
-  for (const line of text.split("\n")) {
-    const tokens = line.trim().split(/\s+/).filter(Boolean);
-    if (tokens.length === 0) continue;
+  for (const tokens of tokenizeMatrix(text)) {
     const row: Fraction[] = [];
     for (const token of tokens) {
       const value = Fraction.parse(token);
