@@ -1,6 +1,6 @@
 import type { ComponentType } from "react";
 import DeterminantTool from "./components/DeterminantTool";
-import GaussTool from "./components/GaussTool";
+import GaussTool from "./components/gauss/GaussTool";
 
 export type ToolCategory = "Matrices" | "Vectors" | "Systems" | "Spaces";
 
