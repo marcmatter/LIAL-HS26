@@ -7,7 +7,7 @@ export const dynamic = "force-static";
 const config = {
   version: process.env.NEXT_PUBLIC_APP_VERSION ?? "dev",
   pages: ["/", ...tools.map((t) => `/tools/${t.slug}`)],
-  assets: ["/manifest.webmanifest", "/icon.svg", "/apple-icon.png", "/icons/icon-192.png", "/icons/icon-512.png", "/icons/maskable-512.png"],
+  assets: ["/manifest.webmanifest", "/favicon.ico", "/icon.svg", "/apple-icon.png", "/icons/icon-192.png", "/icons/icon-512.png", "/icons/maskable-512.png"],
 };
 
 /**

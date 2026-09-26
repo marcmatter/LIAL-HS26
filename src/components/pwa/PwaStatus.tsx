@@ -3,6 +3,8 @@
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useOnline } from "./useOnline";
+// Imported for its side effect: catch the browser's install prompt on every page.
+import "./installPrompt";
 
 type Toast = { kind: "ready" } | { kind: "updated" } | null;
 type CheckState = "idle" | "checking" | "downloading" | "latest" | "failed";

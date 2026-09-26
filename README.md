@@ -50,7 +50,9 @@ The tool page at `/tools/<slug>` and the home page card are generated automatica
 
 ## Offline use (PWA)
 
-The app is an installable Progressive Web App ("Add to Home Screen" / "Install app").
+The app is an installable Progressive Web App. The start page has an **Install app** button:
+it opens the browser's install dialog where supported (Chrome, Edge, Android), shows the
+Share → "Add to Home Screen" steps on iPhone/iPad, and is hidden when the app is already installed.
 
 - **Offline:** on the first visit the service worker (`src/app/sw.js/route.ts`) saves every
   tool page plus its JS/CSS. All tools then work without internet.
