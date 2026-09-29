@@ -1,6 +1,7 @@
 import type { ComponentType } from "react";
 import DeterminantTool from "./components/DeterminantTool";
 import GaussTool from "./components/gauss/GaussTool";
+import LuTool from "./components/lu/LuTool";
 import OperationsTool from "./components/operations/OperationsTool";
 import PracticeTool from "./components/practice/PracticeTool";
 
@@ -31,7 +32,7 @@ export const tools: Tool[] = [
   {
     slug: "operations",
     title: "Vector & Matrix Operations (3D)",
-    description: "Add, scale and multiply vectors and matrices step by step — and see what each operation does in 3D.",
+    description: "Vectors, A + B, Ax, AB, Aᵀ, A⁻¹ and permutation matrices step by step — and what each operation does in 3D.",
     category: "Vectors & Matrices",
     component: OperationsTool,
   },
@@ -48,6 +49,13 @@ export const tools: Tool[] = [
     description: "Row-reduce a matrix step by step with your own row operations, with undo and redo.",
     category: "Systems",
     component: GaussTool,
+  },
+  {
+    slug: "lu-decomposition",
+    title: "LU Decomposition (LR-Zerlegung)",
+    description: "PA = LU step by step with elimination matrices, then solve Ax = b by forward and back substitution.",
+    category: "Systems",
+    component: LuTool,
   },
 ];
 

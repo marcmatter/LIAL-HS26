@@ -17,6 +17,10 @@ export const badges: Badge[] = [
   { id: "under-par", icon: "⛳", title: "Under par", description: "Solve a Gauss-Jordan challenge within par." },
   { id: "right-angle", icon: "📐", title: "Right angle", description: "Find two orthogonal non-zero vectors in the 3D tool." },
   { id: "transformer", icon: "🎬", title: "Transformer", description: "Watch a matrix transform space in the 3D tool." },
+  { id: "order-matters", icon: "🔀", title: "Order matters", description: "Discover that AB ≠ BA in the matrix multiplication tab." },
+  { id: "inverter", icon: "🔁", title: "Inverter", description: "Compute an inverse and confirm that A·A⁻¹ = E." },
+  { id: "decomposer", icon: "🧱", title: "Decomposer", description: "Work through an LU decomposition all the way to the solution x." },
+  { id: "predictor", icon: "🔮", title: "Predictor", description: "Predict every multiplier of an LU decomposition in quiz mode." },
   { id: "flatland", icon: "🥞", title: "Flatland", description: "Find a matrix that squashes space flat (det A = 0)." },
 ];
 

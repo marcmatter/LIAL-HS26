@@ -1,3 +1,4 @@
+import { fromNumbers, inverseF } from "../linalg/fracMatrix";
 import { determinant, formatNumber, type Matrix } from "../linalg/matrix";
 import { add, dot, matVec, scale, sub } from "../linalg/vector";
 import type { Topic } from "./progress";
@@ -37,6 +38,10 @@ export const topics: TopicInfo[] = [
   { id: "mat-vec", icon: "✖️", title: "Matrix × vector", description: "Ax, row by row." },
   { id: "det", icon: "🔳", title: "Determinant", description: "2×2 and 3×3 determinants." },
   { id: "system", icon: "🧩", title: "Linear systems", description: "Solve Ax = b." },
+  { id: "mat-mul", icon: "✴️", title: "Matrix multiplication", description: "AB: row of A times column of B." },
+  { id: "transpose", icon: "🔄", title: "Transpose", description: "Aᵀ: rows become columns." },
+  { id: "inverse", icon: "🔁", title: "Inverse matrix", description: "A⁻¹ with A·A⁻¹ = E." },
+  { id: "lu", icon: "🧱", title: "LU decomposition", description: "Find L or U with A = LU (LR-Zerlegung)." },
 ];
 
 // ---- helpers -------------------------------------------------------------------
@@ -271,6 +276,102 @@ const generators: Record<Topic, Generator> = {
         `x = ${vecStr(x)}`,
         ...A.map((row, i) => `check row ${i + 1}: ${row.map((a, j) => `${p(a)}·${p(x[j])}`).join(" + ")} = ${f(b[i])} ✓`),
       ],
+    };
+  },
+
+  "mat-mul": (d) => {
+    const [l, m, n] = d === 1 ? [2, 2, 2] : d === 2 ? pick([[2, 3, 2], [3, 2, 3], [2, 2, 3], [3, 2, 2]]) : [3, 3, 3];
+    const r = d === 3 ? 4 : 3;
+    // Sometimes an identity or permutation factor, to recognise E·A = A and P·A = row swap.
+    let A = mat(l, m, r);
+    if (d === 1 && Math.random() < 0.3) A = pick([[[1, 0], [0, 1]], [[0, 1], [1, 0]]]);
+    const B = mat(m, n, r);
+    const C = A.map((row) => B[0].map((_, k) => row.reduce((acc, x, j) => acc + x * B[j][k], 0)));
+    return {
+      task: "Compute the matrix product AB.",
+      given: [
+        { label: "A", value: A, color: "a" },
+        { label: "B", value: B, color: "b" },
+      ],
+      answer: C,
+      answerLabel: "AB",
+      hint: `Entry (i, k) of AB = (row i of A) • (column k of B). Entry (1,1): ${A[0].map((a, j) => `${p(a)}·${p(B[j][0])}`).join(" + ")}.`,
+      solution: C.flatMap((row, i) =>
+        row.map((c, k) => `c${sub_[i]}${sub_[k]} = ${A[i].map((a, j) => `${p(a)}·${p(B[j][k])}`).join(" + ")} = ${f(c)}`),
+      ),
+    };
+  },
+
+  transpose: (d) => {
+    const [m, n] = d === 1 ? [2, 3] : d === 2 ? pick([[3, 2], [3, 4], [2, 4]]) : pick([[4, 3], [4, 4], [3, 4]]);
+    const A = mat(m, n, 9);
+    const T = A[0].map((_, j) => A.map((row) => row[j]));
+    return {
+      task: "Write down the transpose Aᵀ.",
+      given: [{ label: "A", value: A }],
+      answer: T,
+      answerLabel: "Aᵀ",
+      hint: `Mirror A at its main diagonal: row 1 of A (${A[0].map(f).join(", ")}) becomes column 1 of Aᵀ.`,
+      solution: A.map((row, i) => `row ${i + 1} of A = (${row.map(f).join(", ")}) → column ${i + 1} of Aᵀ`),
+    };
+  },
+
+  inverse: (d) => {
+    let A: Matrix;
+    if (d === 3) {
+      // Product of integer elementary matrices: det = ±1, so A⁻¹ has integer entries.
+      A = [[1, 0, 0], [0, 1, 0], [0, 0, 1]];
+      for (let k = 0; k < 4; k++) {
+        const i = rand(0, 2);
+        const j = (i + rand(1, 2)) % 3;
+        const c = randNonZero(-2, 2);
+        A[i] = A[i].map((x, col) => x + c * A[j][col]);
+      }
+    } else {
+      const dets = d === 1 ? [1, -1] : [1, -1, 2, -2];
+      do A = mat(2, 2, 5);
+      while (!dets.includes(Math.round(determinant(A))));
+    }
+    const inv = inverseF(fromNumbers(A)).inverse!.map((row) => row.map((x) => x.toNumber()));
+    const det = Math.round(determinant(A));
+    const two = A.length === 2;
+    return {
+      task: "Compute the inverse matrix A⁻¹.",
+      given: [{ label: "A", value: A }],
+      answer: inv,
+      answerLabel: "A⁻¹",
+      hint: two
+        ? "For A = (a b; c d): A⁻¹ = 1/(ad − bc) · (d −b; −c a). Fractions like 1/2 are fine."
+        : "Row-reduce [A | E] until the left half is E — the right half is then A⁻¹.",
+      solution: two
+        ? [
+            `ad − bc = ${p(A[0][0])}·${p(A[1][1])} − ${p(A[0][1])}·${p(A[1][0])} = ${f(det)}`,
+            `A⁻¹ = 1/${p(det)} · (${f(A[1][1])}  ${f(-A[0][1])} ; ${f(-A[1][0])}  ${f(A[0][0])})`,
+            "Check: A·A⁻¹ = E",
+          ]
+        : [`det A = ${f(det)}, so A is invertible.`, "Gauss-Jordan on [A | E] gives [E | A⁻¹].", "Check: A·A⁻¹ = E"],
+    };
+  },
+
+  lu: (d) => {
+    const n = d === 1 ? 2 : 3;
+    const L = Array.from({ length: n }, (_, i) => Array.from({ length: n }, (_, j) => (i === j ? 1 : j < i ? rand(-3, 3) : 0)));
+    const U = Array.from({ length: n }, (_, i) => Array.from({ length: n }, (_, j) => (j === i ? randNonZero(-4, 4) : j > i ? rand(-4, 4) : 0)));
+    const A = L.map((row) => U[0].map((_, k) => row.reduce((acc, x, j) => acc + x * U[j][k], 0)));
+    const askL = Math.random() < 0.5;
+    const multipliers: string[] = [];
+    for (let j = 0; j < n; j++) for (let i = j + 1; i < n; i++) multipliers.push(`l${sub_[i]}${sub_[j]} = ${f(L[i][j])}`);
+    return {
+      task: askL
+        ? "Find the lower triangular matrix L of the LU decomposition A = LU (no row swaps)."
+        : "Find the upper triangular matrix U of the LU decomposition A = LU (no row swaps).",
+      given: [{ label: "A", value: A }],
+      answer: askL ? L : U,
+      answerLabel: askL ? "L" : "U",
+      hint: askL
+        ? `Eliminate below each pivot. The multiplier l_ij = (entry to eliminate) / (pivot) goes into row i, column j of L; the diagonal of L is 1. First: l₂₁ = ${f(A[1][0])} / ${p(A[0][0])}.`
+        : `Do Gaussian elimination without swaps — U is the resulting row echelon form. First step: row 2 − (${f(A[1][0])} / ${p(A[0][0])}) · row 1.`,
+      solution: [`multipliers: ${multipliers.join(",  ")}`, `U = (${U.map((row) => row.map(f).join("  ")).join(" ; ")})`, "Check: L·U = A"],
     };
   },
 };

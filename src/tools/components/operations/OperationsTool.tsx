@@ -1,14 +1,18 @@
 "use client";
 
 import { useState } from "react";
+import MatMulMode from "./MatMulMode";
 import MatOpsMode from "./MatOpsMode";
 import MatVecMode from "./MatVecMode";
+import SpecialMode from "./SpecialMode";
 import VectorMode from "./VectorMode";
 
 const modes = [
   { id: "vectors", label: "Vectors", hint: "a + b, λ·a, linear combinations, dot product", Component: VectorMode },
   { id: "matvec", label: "Matrix × vector", hint: "Ax — as a combination of columns and as a transformation", Component: MatVecMode },
   { id: "matops", label: "Matrix + matrix", hint: "A + B, A − B, λ·A", Component: MatOpsMode },
+  { id: "matmul", label: "Matrix × matrix", hint: "AB row · column, AB ≠ BA, composition", Component: MatMulMode },
+  { id: "special", label: "Special matrices", hint: "E, Aᵀ, A⁻¹, permutation P", Component: SpecialMode },
 ] as const;
 
 type ModeId = (typeof modes)[number]["id"];
@@ -18,7 +22,7 @@ export default function OperationsTool() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div role="tablist" aria-label="Topic" className="grid gap-2 sm:grid-cols-3">
+      <div role="tablist" aria-label="Topic" className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
         {modes.map((m) => {
           const active = m.id === mode;
           return (

@@ -17,6 +17,10 @@ const exploreLinks: Partial<Record<Topic, { href: string; label: string }>> = {
   "mat-vec": { href: "/tools/operations", label: "See it in 3D" },
   det: { href: "/tools/determinant", label: "Determinant tool" },
   system: { href: "/tools/gaussian-elimination", label: "Gauss-Jordan tool" },
+  "mat-mul": { href: "/tools/operations", label: "Matrix × matrix tool" },
+  transpose: { href: "/tools/operations", label: "Special matrices" },
+  inverse: { href: "/tools/operations", label: "Special matrices" },
+  lu: { href: "/tools/lu-decomposition", label: "LU decomposition tool" },
 };
 
 type Phase = "answering" | "correct" | "revealed";

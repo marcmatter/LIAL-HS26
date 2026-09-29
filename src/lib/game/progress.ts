@@ -9,7 +9,19 @@ import { badgeById } from "./badges";
  * per device.
  */
 
-export type Topic = "vec-add" | "vec-comb" | "dot" | "length" | "mat-add" | "mat-vec" | "det" | "system";
+export type Topic =
+  | "vec-add"
+  | "vec-comb"
+  | "dot"
+  | "length"
+  | "mat-add"
+  | "mat-vec"
+  | "det"
+  | "system"
+  | "mat-mul"
+  | "transpose"
+  | "inverse"
+  | "lu";
 
 export interface TopicStats {
   attempts: number;
@@ -38,7 +50,20 @@ export type Reward =
 
 const KEY = "lial-progress-v1";
 const EMPTY: Progress = { xp: 0, days: [], topics: {}, badges: {}, challenges: {} };
-export const ALL_TOPICS: Topic[] = ["vec-add", "vec-comb", "dot", "length", "mat-add", "mat-vec", "det", "system"];
+export const ALL_TOPICS: Topic[] = [
+  "vec-add",
+  "vec-comb",
+  "dot",
+  "length",
+  "mat-add",
+  "mat-vec",
+  "det",
+  "system",
+  "mat-mul",
+  "transpose",
+  "inverse",
+  "lu",
+];
 
 // ---- levels ------------------------------------------------------------------
 
