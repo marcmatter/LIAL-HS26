@@ -59,6 +59,15 @@ src/
 
 The tool page at `/tools/<slug>` and the home page card are generated automatically.
 
+## Languages
+
+The whole app is available in **English and German** — switch with **EN | DE** in the header.
+The choice is stored in `localStorage` (`lial-lang`); without a stored choice the browser
+language decides, and all open tabs switch together. Texts live next to their translation:
+`t("English", "Deutsch")` in components (`useT()` from `src/lib/i18n/lang.ts`) and
+`L("English", "Deutsch")` for data such as the tool registry, exercises and badges
+(`src/lib/i18n/text.ts`).
+
 ## Gamification
 
 Progress lives in the browser (`src/lib/game/progress.ts`, localStorage — no account, works

@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useState } from "react";
 import { promptInstall, useInstallState } from "./installPrompt";
+import { useT } from "@/lib/i18n/lang";
 
 function DownloadIcon() {
   return (
@@ -28,6 +29,7 @@ function ShareIcon() {
 export default function InstallApp() {
   const state = useInstallState();
   const [help, setHelp] = useState(false);
+  const t = useT();
 
   if (state === "unknown" || state === "installed") return null;
 
@@ -44,34 +46,74 @@ export default function InstallApp() {
       <Image src="/icons/icon-192.png" alt="" width={48} height={48} unoptimized className="h-12 w-12 shrink-0 rounded-xl" />
       <div className="flex-1">
         <h2 id="install-title" className="font-semibold">
-          Install LIAL as an app
+          {t("Install LIAL as an app", "LIAL als App installieren")}
         </h2>
         <p className="text-sm text-muted">
-          Opens in its own window, works without internet and updates itself with new math helpers.
+          {t(
+            "Opens in its own window, works without internet and updates itself with new math helpers.",
+            "Öffnet sich im eigenen Fenster, funktioniert ohne Internet und aktualisiert sich mit neuen Mathe-Helfern.",
+          )}
         </p>
         {help && (
           <div className="mt-3 rounded-lg border border-border bg-background p-3 text-sm">
             {state === "ios" ? (
               <ol className="list-decimal space-y-1 pl-5">
                 <li>
-                  Tap <ShareIcon /> <strong>Share</strong> in Safari&apos;s toolbar.
+                  {t(
+                    <>
+                      Tap <ShareIcon /> <strong>Share</strong> in Safari&apos;s toolbar.
+                    </>,
+                    <>
+                      Tippe in der Safari-Leiste auf <ShareIcon /> <strong>Teilen</strong>.
+                    </>,
+                  )}
                 </li>
                 <li>
-                  Choose <strong>Add to Home Screen</strong>, then <strong>Add</strong>.
+                  {t(
+                    <>
+                      Choose <strong>Add to Home Screen</strong>, then <strong>Add</strong>.
+                    </>,
+                    <>
+                      Wähle <strong>Zum Home-Bildschirm</strong>, dann <strong>Hinzufügen</strong>.
+                    </>,
+                  )}
                 </li>
               </ol>
             ) : (
               <ul className="list-disc space-y-1 pl-5">
                 <li>
-                  <strong>Chrome / Edge:</strong> click the install icon in the address bar, or open the menu (⋮) and choose{" "}
-                  <strong>Install LIAL</strong> / <strong>Add to Home screen</strong>.
+                  {t(
+                    <>
+                      <strong>Chrome / Edge:</strong> click the install icon in the address bar, or open the menu (⋮) and choose{" "}
+                      <strong>Install LIAL</strong> / <strong>Add to Home screen</strong>.
+                    </>,
+                    <>
+                      <strong>Chrome / Edge:</strong> Klicke auf das Installieren-Symbol in der Adressleiste oder öffne das Menü (⋮)
+                      und wähle <strong>LIAL installieren</strong> / <strong>Zum Startbildschirm hinzufügen</strong>.
+                    </>,
+                  )}
                 </li>
                 <li>
-                  <strong>Safari on Mac:</strong> File → <strong>Add to Dock</strong>.
+                  {t(
+                    <>
+                      <strong>Safari on Mac:</strong> File → <strong>Add to Dock</strong>.
+                    </>,
+                    <>
+                      <strong>Safari auf dem Mac:</strong> Ablage → <strong>Zum Dock hinzufügen</strong>.
+                    </>,
+                  )}
                 </li>
                 <li>
-                  <strong>Firefox on Android:</strong> menu (⋮) → <strong>Install</strong>. Firefox on desktop cannot install apps —
-                  the website still works offline once visited.
+                  {t(
+                    <>
+                      <strong>Firefox on Android:</strong> menu (⋮) → <strong>Install</strong>. Firefox on desktop cannot install
+                      apps — the website still works offline once visited.
+                    </>,
+                    <>
+                      <strong>Firefox auf Android:</strong> Menü (⋮) → <strong>Installieren</strong>. Firefox auf dem Desktop kann
+                      keine Apps installieren — die Website funktioniert nach dem ersten Besuch trotzdem offline.
+                    </>,
+                  )}
                 </li>
               </ul>
             )}
@@ -85,7 +127,7 @@ export default function InstallApp() {
         className="inline-flex items-center justify-center gap-2 self-start rounded-lg bg-accent px-4 py-2 text-sm font-medium text-accent-contrast transition hover:opacity-90 sm:self-center"
       >
         <DownloadIcon />
-        {state === "promptable" ? "Install app" : help ? "Hide instructions" : "Install app"}
+        {state === "promptable" ? t("Install app", "App installieren") : help ? t("Hide instructions", "Anleitung ausblenden") : t("Install app", "App installieren")}
       </button>
     </section>
   );

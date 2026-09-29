@@ -19,6 +19,7 @@ import { gaussPresetGroups } from "@/tools/data/gaussPresets";
 import MatrixGridEditor from "@/components/matrix-editor/MatrixGridEditor";
 import FactorInput, { type Factor, type FactorField } from "./FactorInput";
 import Value, { formatValue, type DisplayMode } from "./Value";
+import { useT } from "@/lib/i18n/lang";
 
 /** An operation waiting for its second row. */
 type Pending = { type: "add" | "sub" | "swap"; row: number } | null;
@@ -61,6 +62,8 @@ const Kbd = ({ children }: { children: string }) => (
 );
 
 export default function GaussTool() {
+  // `t` is used for row names below, so the translation helper is `tt`.
+  const tt = useT();
   const [sourceId, setSourceId] = useState(initial.id);
   const [editorOpen, setEditorOpen] = useState(false);
   // Remounts the editor (fresh copy of the current matrix) every time it opens.
@@ -129,12 +132,16 @@ export default function GaussTool() {
 
     const target = pending ? pending.row : row;
     const f1 = parseFactor(factors[target]);
-    if (!f1) return `The factor of R${target + 1} is not a valid number.`;
-    if (f1.isZero()) return `R${target + 1} would be multiplied by 0 — that is not an elementary row operation.`;
+    if (!f1) return tt(`The factor of R${target + 1} is not a valid number.`, `Der Faktor von R${target + 1} ist keine gültige Zahl.`);
+    if (f1.isZero())
+      return tt(
+        `R${target + 1} would be multiplied by 0 — that is not an elementary row operation.`,
+        `R${target + 1} würde mit 0 multipliziert — das ist keine elementare Zeilenumformung.`,
+      );
     if (!pending) return { type: "mul", factor: f1, row };
 
     const f2 = parseFactor(factors[row]);
-    if (!f2) return `The factor of R${row + 1} is not a valid number.`;
+    if (!f2) return tt(`The factor of R${row + 1} is not a valid number.`, `Der Faktor von R${row + 1} ist keine gültige Zahl.`);
     return { type: pending.type, factor1: f1, row1: pending.row, factor2: f2, row2: row };
   }
 
@@ -178,7 +185,7 @@ export default function GaussTool() {
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch {
-      setMessage("Copying to the clipboard is not available in this browser.");
+      setMessage(tt("Copying to the clipboard is not available in this browser.", "Kopieren in die Zwischenablage ist in diesem Browser nicht möglich."));
     }
   }
 
@@ -213,23 +220,30 @@ export default function GaussTool() {
   const status = (() => {
     if (message) return { tone: "danger" as const, text: message };
     if (validPreview) {
-      return { tone: "accent" as const, text: `${describeRowOp(validPreview, fmt)}   — click to apply` };
+      return { tone: "accent" as const, text: `${describeRowOp(validPreview, fmt)}   — ${tt("click to apply", "klicken zum Anwenden")}` };
     }
     if (pending) {
       const t = `R${pending.row + 1}`;
       const text =
         pending.type === "swap"
-          ? `${t} ↔ ?   — click the row to swap with`
-          : `${t} ← ${t} ${pending.type === "add" ? "+" : "−"} factor · R?   — click the second row (its factor is used)`;
+          ? `${t} ↔ ?   — ${tt("click the row to swap with", "klicke die Zeile zum Tauschen")}`
+          : `${t} ← ${t} ${pending.type === "add" ? "+" : "−"} ${tt("factor", "Faktor")} · R?   — ${tt("click the second row (its factor is used)", "klicke die zweite Zeile (ihr Faktor wird verwendet)")}`;
       return { tone: "accent" as const, text };
     }
     return {
       tone: "muted" as const,
-      text: "Choose +=, −= or ↔ on the row you want to change — or press · R to multiply a row by its factor.",
+      text: tt(
+        "Choose +=, −= or ↔ on the row you want to change — or press · R to multiply a row by its factor.",
+        "Wähle +=, −= oder ↔ bei der Zeile, die du ändern willst — oder drücke · R, um eine Zeile mit ihrem Faktor zu multiplizieren.",
+      ),
     };
   })();
 
-  const reached = info.isReduced ? "Reduced row echelon form" : info.isRowEchelon ? "Row echelon form" : null;
+  const reached = info.isReduced
+    ? tt("Reduced row echelon form", "Reduzierte Zeilenstufenform")
+    : info.isRowEchelon
+      ? tt("Row echelon form", "Zeilenstufenform")
+      : null;
 
   // ---- render ----------------------------------------------------------------
 
@@ -265,7 +279,7 @@ export default function GaussTool() {
                     ))}
                 </optgroup>
               ))}
-              <option value={CUSTOM}>Custom…</option>
+              <option value={CUSTOM}>{tt("Custom…", "Eigene…")}</option>
             </select>
           </label>
           <button
@@ -274,28 +288,28 @@ export default function GaussTool() {
             aria-expanded={editorOpen}
             onClick={() => openEditor(!editorOpen)}
           >
-            ✎ {editorOpen ? "Close editor" : "Enter your own matrix"}
+            ✎ {editorOpen ? tt("Close editor", "Editor schliessen") : tt("Enter your own matrix", "Eigene Matrix eingeben")}
           </button>
 
           <div className="ml-auto flex flex-wrap items-end gap-3">
             <label className="flex flex-col gap-1 text-sm">
-              <span className="text-muted">Augmented divider</span>
+              <span className="text-muted">{tt("Augmented divider", "Trennlinie (erweitert)")}</span>
               <select
                 className="h-9 rounded-md border border-border bg-surface px-2"
                 value={divider ?? "none"}
                 onChange={(e) => setDivider(e.target.value === "none" ? null : Number(e.target.value))}
               >
-                <option value="none">None</option>
+                <option value="none">{tt("None", "Keiner")}</option>
                 {Array.from({ length: Math.max(0, cols - 1) }, (_, i) => i + 1).map((c) => (
                   <option key={c} value={c}>
-                    After column {c}
+                    {tt(`After column ${c}`, `Nach Spalte ${c}`)}
                   </option>
                 ))}
               </select>
             </label>
             <div className="flex flex-col gap-1 text-sm">
-              <span className="text-muted">Numbers</span>
-              <div role="radiogroup" aria-label="Number format" className="inline-flex h-9 rounded-md border border-border p-0.5">
+              <span className="text-muted">{tt("Numbers", "Zahlen")}</span>
+              <div role="radiogroup" aria-label={tt("Number format", "Zahlenformat")} className="inline-flex h-9 rounded-md border border-border p-0.5">
                 {(["fraction", "decimal"] as const).map((m) => (
                   <button
                     key={m}
@@ -305,7 +319,7 @@ export default function GaussTool() {
                     className={`rounded px-3 text-sm capitalize transition ${mode === m ? "bg-accent text-accent-contrast" : "text-muted hover:text-foreground"}`}
                     onClick={() => setMode(m)}
                   >
-                    {m === "fraction" ? "Fractions" : "Decimals"}
+                    {m === "fraction" ? tt("Fractions", "Brüche") : tt("Decimals", "Dezimalzahlen")}
                   </button>
                 ))}
               </div>
@@ -320,7 +334,7 @@ export default function GaussTool() {
               initial={base.map((row) => row.map(String))}
               initialAugmented={divider !== null}
               current={cursor > 0 ? matrix.map((row) => row.map(String)) : undefined}
-              submitLabel="Load into workspace"
+              submitLabel={tt("Load into workspace", "In Arbeitsbereich laden")}
               onSubmit={(m, augmented) => {
                 loadMatrix(m, CUSTOM, augmented);
                 openEditor(false);
@@ -335,7 +349,7 @@ export default function GaussTool() {
       <div className="flex flex-col gap-4 rounded-xl border border-border p-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-lg font-semibold">
-            {presets.find((p) => p.id === sourceId)?.label ?? "Custom matrix"}
+            {presets.find((p) => p.id === sourceId)?.label ?? tt("Custom matrix", "Eigene Matrix")}
             <span className="ml-2 text-sm font-normal text-muted">
               {matrix.length} × {cols}
             </span>
@@ -349,17 +363,29 @@ export default function GaussTool() {
 
         {solved ? (
           <div className="flex flex-wrap items-center gap-3 rounded-lg border border-success/40 bg-success/10 px-3 py-2 text-sm">
-            <span className="text-2xl tracking-tight text-success" aria-label={`${stars} of 3 stars`}>
+            <span className="text-2xl tracking-tight text-success" aria-label={tt(`${stars} of 3 stars`, `${stars} von 3 Sternen`)}>
               {"★".repeat(stars)}
               <span className="opacity-30">{"★".repeat(3 - stars)}</span>
             </span>
             <span className="flex-1">
-              <strong>Challenge solved</strong> in {cursor} {cursor === 1 ? "step" : "steps"} (par {par}).{" "}
-              {stars === 3 ? "Perfect — within par!" : `Solve it in ${stars === 2 ? par : par + 2} steps or fewer for ${stars === 2 ? "★★★" : "★★"}.`}
+              {tt(
+                <>
+                  <strong>Challenge solved</strong> in {cursor} {cursor === 1 ? "step" : "steps"} (par {par}).
+                </>,
+                <>
+                  <strong>Challenge gelöst</strong> in {cursor} {cursor === 1 ? "Schritt" : "Schritten"} (Par {par}).
+                </>,
+              )}{" "}
+              {stars === 3
+                ? tt("Perfect — within par!", "Perfekt — innerhalb von Par!")
+                : tt(
+                    `Solve it in ${stars === 2 ? par : par + 2} steps or fewer for ${stars === 2 ? "★★★" : "★★"}.`,
+                    `Schaffe es in höchstens ${stars === 2 ? par : par + 2} Schritten für ${stars === 2 ? "★★★" : "★★"}.`,
+                  )}
             </span>
             {stars < 3 && (
               <button type="button" className={btn} onClick={() => jumpTo(0)}>
-                Try again
+                {tt("Try again", "Nochmal versuchen")}
               </button>
             )}
           </div>
@@ -367,16 +393,17 @@ export default function GaussTool() {
           par > 0 && (
             <p className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-lg border border-border px-3 py-2 text-sm text-muted">
               <span>
-                🎯 <strong className="text-foreground">Challenge:</strong> reach the reduced row echelon form
+                🎯 <strong className="text-foreground">Challenge:</strong>{" "}
+                {tt("reach the reduced row echelon form", "erreiche die reduzierte Zeilenstufenform")}
               </span>
               <span>
                 Par <strong className="font-mono text-foreground">{par}</strong>
               </span>
               <span>
-                Your steps <strong className="font-mono text-foreground">{cursor}</strong>
+                {tt("Your steps", "Deine Schritte")} <strong className="font-mono text-foreground">{cursor}</strong>
               </span>
-              <span title="Best result for this matrix">
-                Best{" "}
+              <span title={tt("Best result for this matrix", "Bestes Ergebnis für diese Matrix")}>
+                {tt("Best", "Bestwert")}{" "}
                 <span className="text-accent">{"★".repeat(bestStars)}</span>
                 <span className="opacity-40">{"☆".repeat(3 - bestStars)}</span>
               </span>
@@ -397,7 +424,7 @@ export default function GaussTool() {
           <span className="flex-1 whitespace-pre-wrap">{status.text}</span>
           {pending && (
             <button type="button" className={`${btn} h-7 font-sans`} onClick={() => setPending(null)}>
-              Cancel <Kbd>Esc</Kbd>
+              {tt("Cancel", "Abbrechen")} <Kbd>Esc</Kbd>
             </button>
           )}
         </p>
@@ -439,13 +466,13 @@ export default function GaussTool() {
                           key={flash.rows.includes(r) ? `f${flash.id}` : "s"}
                           type="button"
                           draggable
-                          aria-label={`Row ${r + 1}, column ${c + 1}: ${value.toString()}`}
+                          aria-label={tt(`Row ${r + 1}, column ${c + 1}: ${value.toString()}`, `Zeile ${r + 1}, Spalte ${c + 1}: ${value.toString()}`)}
                           title={
                             pending
-                              ? `Use R${r + 1} as the second row`
+                              ? tt(`Use R${r + 1} as the second row`, `R${r + 1} als zweite Zeile verwenden`)
                               : armed
-                                ? "Click to copy into the selected factor"
-                                : "Drag onto a factor to copy this value"
+                                ? tt("Click to copy into the selected factor", "Klicken, um in den gewählten Faktor zu kopieren")
+                                : tt("Drag onto a factor to copy this value", "Auf einen Faktor ziehen, um den Wert zu kopieren")
                           }
                           onMouseDown={(e) => armed && !pending && e.preventDefault()}
                           onDragStart={(e) => {
@@ -508,13 +535,13 @@ export default function GaussTool() {
                       onArm={(field) => setArmed(field ? { row: r, field } : null)}
                     />
                     <div className="inline-flex divide-x divide-border overflow-hidden rounded-md border border-border bg-surface">
-                      {opButton("add", "+=", `R${r + 1} ← factor·R${r + 1} + factor·(second row)`)}
-                      {opButton("sub", "−=", `R${r + 1} ← factor·R${r + 1} − factor·(second row)`)}
-                      {opButton("swap", "↔", `Swap R${r + 1} with another row`)}
+                      {opButton("add", "+=", tt(`R${r + 1} ← factor·R${r + 1} + factor·(second row)`, `R${r + 1} ← Faktor·R${r + 1} + Faktor·(zweite Zeile)`))}
+                      {opButton("sub", "−=", tt(`R${r + 1} ← factor·R${r + 1} − factor·(second row)`, `R${r + 1} ← Faktor·R${r + 1} − Faktor·(zweite Zeile)`))}
+                      {opButton("swap", "↔", tt(`Swap R${r + 1} with another row`, `R${r + 1} mit einer anderen Zeile tauschen`))}
                     </div>
                     <button
                       type="button"
-                      title={pending ? `Use R${r + 1} as the second row` : `Multiply R${r + 1} by its factor`}
+                      title={pending ? tt(`Use R${r + 1} as the second row`, `R${r + 1} als zweite Zeile verwenden`) : tt(`Multiply R${r + 1} by its factor`, `R${r + 1} mit ihrem Faktor multiplizieren`)}
                       className={`${btn} w-16 whitespace-nowrap px-2 font-medium ${pending ? "border-accent bg-accent/10" : ""}`}
                       onMouseEnter={() => setHover({ row: r, scale: !pending })}
                       onMouseLeave={() => setHover(null)}
@@ -538,16 +565,16 @@ export default function GaussTool() {
 
         <div className="flex flex-wrap items-center gap-2 border-t border-border pt-3">
           <button type="button" className={btn} onClick={undo} disabled={cursor === 0}>
-            Undo <Kbd>Ctrl Z</Kbd>
+            {tt("Undo", "Rückgängig")} <Kbd>Ctrl Z</Kbd>
           </button>
           <button type="button" className={btn} onClick={redo} disabled={cursor === timeline.length}>
-            Redo <Kbd>Ctrl Y</Kbd>
+            {tt("Redo", "Wiederholen")} <Kbd>Ctrl Y</Kbd>
           </button>
           <button type="button" className={btn} onClick={() => jumpTo(0)} disabled={cursor === 0}>
-            Reset
+            {tt("Reset", "Zurücksetzen")}
           </button>
           <button type="button" className={`${btn} ml-auto`} onClick={copyMatrix}>
-            {copied ? "Copied ✓" : "Copy matrix"}
+            {copied ? tt("Copied ✓", "Kopiert ✓") : tt("Copy matrix", "Matrix kopieren")}
           </button>
         </div>
       </div>
@@ -555,7 +582,7 @@ export default function GaussTool() {
       {/* Steps & help */}
       <div className="grid gap-6 md:grid-cols-2">
         <section className="flex flex-col gap-2">
-          <h2 className="text-lg font-semibold">Steps</h2>
+          <h2 className="text-lg font-semibold">{tt("Steps", "Schritte")}</h2>
           <ol className="flex flex-col gap-0.5 font-mono text-sm">
             {[null, ...timeline].map((op, i) => (
               <li key={i}>
@@ -568,31 +595,48 @@ export default function GaussTool() {
                   }`}
                 >
                   <span className="w-6 shrink-0 text-right text-muted">{i}.</span>
-                  <span>{op ? describeRowOp(op, fmt) : "Start"}</span>
+                  <span>{op ? describeRowOp(op, fmt) : tt("Start", "Start")}</span>
                 </button>
               </li>
             ))}
           </ol>
-          {timeline.length > 0 && <p className="text-xs text-muted">Click a step to jump back to it.</p>}
+          {timeline.length > 0 && <p className="text-xs text-muted">{tt("Click a step to jump back to it.", "Klicke auf einen Schritt, um dorthin zurückzuspringen.")}</p>}
         </section>
 
         <section className="flex flex-col gap-2 text-sm text-muted">
-          <h2 className="text-lg font-semibold text-foreground">How it works</h2>
+          <h2 className="text-lg font-semibold text-foreground">{tt("How it works", "So funktioniert’s")}</h2>
           <ul className="list-disc space-y-1.5 pl-5">
-            <li>Every row has a factor, written as a fraction. It resets to 1 after it has been used.</li>
             <li>
-              <span className="font-mono text-foreground">+=</span> / <span className="font-mono text-foreground">−=</span> on
-              row i, then click row j: R<sub>i</sub> ← f<sub>i</sub>·R<sub>i</sub> ± f<sub>j</sub>·R<sub>j</sub>. Hover a row
-              to preview the result.
+              {tt(
+                "Every row has a factor, written as a fraction. It resets to 1 after it has been used.",
+                "Jede Zeile hat einen Faktor, geschrieben als Bruch. Nach der Verwendung springt er auf 1 zurück.",
+              )}
             </li>
             <li>
-              <span className="font-mono text-foreground">↔</span> on row i, then click row j: swap the two rows.
+              <span className="font-mono text-foreground">+=</span> / <span className="font-mono text-foreground">−=</span>{" "}
+              {tt("on row i, then click row j", "bei Zeile i, dann Zeile j anklicken")}: R<sub>i</sub> ← f<sub>i</sub>·R<sub>i</sub> ±
+              f<sub>j</sub>·R<sub>j</sub>. {tt("Hover a row to preview the result.", "Fahre über eine Zeile für eine Vorschau.")}
             </li>
             <li>
-              <span className="font-mono text-foreground">· Rj</span>: multiply row j by its factor.
+              <span className="font-mono text-foreground">↔</span>{" "}
+              {tt("on row i, then click row j: swap the two rows.", "bei Zeile i, dann Zeile j anklicken: die beiden Zeilen tauschen.")}
             </li>
-            <li>Drag an entry onto a factor to copy it — or select the factor field, then click the entry.</li>
-            <li>Leading entries (pivots) are highlighted; a badge appears once the matrix is in (reduced) row echelon form.</li>
+            <li>
+              <span className="font-mono text-foreground">· Rj</span>:{" "}
+              {tt("multiply row j by its factor.", "Zeile j mit ihrem Faktor multiplizieren.")}
+            </li>
+            <li>
+              {tt(
+                "Drag an entry onto a factor to copy it — or select the factor field, then click the entry.",
+                "Ziehe einen Eintrag auf einen Faktor, um ihn zu kopieren — oder wähle das Faktorfeld und klicke dann den Eintrag.",
+              )}
+            </li>
+            <li>
+              {tt(
+                "Leading entries (pivots) are highlighted; a badge appears once the matrix is in (reduced) row echelon form.",
+                "Führende Einträge (Pivots) sind hervorgehoben; ein Abzeichen erscheint, sobald die Matrix in (reduzierter) Zeilenstufenform ist.",
+              )}
+            </li>
           </ul>
         </section>
       </div>

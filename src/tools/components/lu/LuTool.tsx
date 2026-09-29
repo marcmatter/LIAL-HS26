@@ -8,6 +8,7 @@ import { equalF, fromNumbers, mulF } from "@/lib/linalg/fracMatrix";
 import { backSubstitution, forwardSubstitution, luDecompose, type LuStep } from "@/lib/linalg/lu";
 import type { FracMatrix } from "@/lib/linalg/rowOps";
 import { awardBadge, recordAnswer } from "@/lib/game/progress";
+import { useT } from "@/lib/i18n/lang";
 
 interface Preset {
   id: string;
@@ -17,10 +18,10 @@ interface Preset {
 }
 
 const presets: Preset[] = [
-  { id: "f24", label: "Folie 24: 2×2 with b", A: [[1, 2], [4, 9]], b: [5, 21] },
-  { id: "f18", label: "Folie 18: basic idea 2×2", A: [[2, 1], [8, 7]] },
-  { id: "f19", label: "Folie 19: 3×3, no row swap", A: [[1, 2, 1], [2, 1, 0], [-3, 0, 9]] },
-  { id: "f26", label: "Folie 26: 3×3 with row swap", A: [[0, 1, 1], [1, 2, 1], [2, 7, 9]], b: [0, 0, 4] },
+  { id: "f24", label: "Folie 24: 2×2 + b", A: [[1, 2], [4, 9]], b: [5, 21] },
+  { id: "f18", label: "Folie 18: 2×2", A: [[2, 1], [8, 7]] },
+  { id: "f19", label: "Folie 19: 3×3", A: [[1, 2, 1], [2, 1, 0], [-3, 0, 9]] },
+  { id: "f26", label: "Folie 26: 3×3 + P", A: [[0, 1, 1], [1, 2, 1], [2, 7, 9]], b: [0, 0, 4] },
 ];
 
 const sub = (n: number) => String(n).replace(/\d/g, (d) => "₀₁₂₃₄₅₆₇₈₉"[Number(d)]);
@@ -28,6 +29,7 @@ const col = (v: Fraction[]) => v.map((x) => [x]);
 
 export default function LuTool() {
   const [presetId, setPresetId] = useState(presets[0].id);
+  const t = useT();
   const [A, setA] = useState<FracMatrix>(() => fromNumbers(presets[0].A));
   const [b, setB] = useState<Fraction[] | null>(() => fromNumbers([presets[0].b!]).at(0)!);
   const [editor, setEditor] = useState(false);
@@ -51,11 +53,15 @@ export default function LuTool() {
 
   // ---- sections revealed one by one ----
   const sections: { title: string; body: ReactNode; stepIndex?: number }[] = [];
-  lu.steps.forEach((step, k) => sections.push({ title: stepTitle(step), body: <StepBody step={step} />, stepIndex: k }));
+  lu.steps.forEach((step, k) => sections.push({ title: stepTitle(step, t), body: <StepBody step={step} />, stepIndex: k }));
 
   const PA = mulF(lu.P, A);
   sections.push({
-    title: lu.singular ? "Result: A is singular" : lu.swapped ? "Result: P·A = L·U" : "Result: A = L·U",
+    title: lu.singular
+      ? t("Result: A is singular", "Ergebnis: A ist singulär")
+      : lu.swapped
+        ? t("Result: P·A = L·U", "Ergebnis: P·A = L·U")
+        : t("Result: A = L·U", "Ergebnis: A = L·U"),
     body: (
       <div className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center gap-3">
@@ -66,16 +72,27 @@ export default function LuTool() {
         <p className="text-sm">
           {lu.singular ? (
             <span className="text-danger">
-              A pivot is 0 and no row swap can fix it — A is singular, so Ax = b has no unique solution.
+              {t(
+                "A pivot is 0 and no row swap can fix it — A is singular, so Ax = b has no unique solution.",
+                "Ein Pivot ist 0 und lässt sich durch Zeilentausch nicht ersetzen — A ist singulär, Ax = b hat keine eindeutige Lösung.",
+              )}
             </span>
           ) : (
             <>
-              Check: {lu.swapped ? "P·A" : "A"} = L·U{" "}
+              {t("Check", "Probe")}: {lu.swapped ? "P·A" : "A"} = L·U{" "}
               <strong className={equalF(PA, mulF(lu.L, lu.U)) ? "text-success" : "text-danger"}>
                 {equalF(PA, mulF(lu.L, lu.U)) ? "✓" : "✗"}
               </strong>
-              . L is lower triangular with ones on the diagonal; each multiplier l<sub>ij</sub> sits in row i, column j. U
-              is the row echelon form (upper triangular).
+              {t(
+                <>
+                  . L is lower triangular with ones on the diagonal; each multiplier l<sub>ij</sub> sits in row i, column j. U is
+                  the row echelon form (upper triangular).
+                </>,
+                <>
+                  . L ist eine untere Dreiecksmatrix mit Einsen auf der Diagonale; jeder Faktor l<sub>ij</sub> steht in Zeile i,
+                  Spalte j. U ist die Zeilenstufenform (obere Dreiecksmatrix).
+                </>,
+              )}
             </>
           )}
         </p>
@@ -92,7 +109,7 @@ export default function LuTool() {
     const x = Array.from({ length: n }, (_, i) => back.find((l) => l.index === i)!.value);
     if (lu.swapped) {
       sections.push({
-        title: "Swap the right-hand side too: b̂ = P·b",
+        title: t("Swap the right-hand side too: b̂ = P·b", "Rechte Seite mitvertauschen: b̂ = P·b"),
         body: (
           <div className="flex flex-wrap items-center gap-2">
             <FracMatrixView m={lu.P} label="P" />
@@ -100,13 +117,13 @@ export default function LuTool() {
             <FracMatrixView m={col(b)} label="b" />
             <span className="text-muted">=</span>
             <FracMatrixView m={col(pb)} tone={() => "accent"} />
-            <p className="w-full text-sm text-muted">The rows of b are swapped exactly like the rows of A.</p>
+            <p className="w-full text-sm text-muted">{t("The rows of b are swapped exactly like the rows of A.", "Die Zeilen von b werden genau so vertauscht wie die Zeilen von A.")}</p>
           </div>
         ),
       });
     }
     sections.push({
-      title: `Forward substitution: L·y = ${lu.swapped ? "b̂" : "b"}`,
+      title: `${t("Forward substitution", "Vorwärtseinsetzen")}: L·y = ${lu.swapped ? "b̂" : "b"}`,
       body: (
         <SubstitutionBody
           matrix={lu.L}
@@ -115,12 +132,12 @@ export default function LuTool() {
           rhsName={lu.swapped ? "b̂" : "b"}
           unknown="y"
           lines={forward.map((l) => l.text)}
-          formula="yᵢ = (bᵢ − Σ lᵢₖ·yₖ for k < i) / lᵢᵢ — top to bottom"
+          formula={t("yᵢ = (bᵢ − Σ lᵢₖ·yₖ for k < i) / lᵢᵢ — top to bottom", "yᵢ = (bᵢ − Σ lᵢₖ·yₖ für k < i) / lᵢᵢ — von oben nach unten")}
         />
       ),
     });
     sections.push({
-      title: "Back substitution: U·x = y",
+      title: t("Back substitution: U·x = y", "Rückwärtseinsetzen: U·x = y"),
       body: (
         <SubstitutionBody
           matrix={lu.U}
@@ -129,18 +146,18 @@ export default function LuTool() {
           rhsName="y"
           unknown="x"
           lines={back.map((l) => l.text)}
-          formula="xᵢ = (yᵢ − Σ rᵢₖ·xₖ for k > i) / rᵢᵢ — bottom to top"
+          formula={t("xᵢ = (yᵢ − Σ rᵢₖ·xₖ for k > i) / rᵢᵢ — bottom to top", "xᵢ = (yᵢ − Σ rᵢₖ·xₖ für k > i) / rᵢᵢ — von unten nach oben")}
         />
       ),
     });
     const check = equalF(mulF(A, col(x)), col(b));
     sections.push({
-      title: "Solution",
+      title: t("Solution", "Lösung"),
       body: (
         <div className="flex flex-wrap items-center gap-3">
           <FracMatrixView m={col(x)} label="x" tone={() => "success"} />
           <span className="text-sm">
-            Check A·x = b <strong className={check ? "text-success" : "text-danger"}>{check ? "✓" : "✗"}</strong>
+            {t("Check", "Probe")} A·x = b <strong className={check ? "text-success" : "text-danger"}>{check ? "✓" : "✗"}</strong>
           </span>
         </div>
       ),
@@ -194,7 +211,7 @@ export default function LuTool() {
               setEditor(!editor);
             }}
           >
-            ✎ Your own matrix
+            ✎ {t("Your own matrix", "Eigene Matrix")}
           </button>
         </div>
 
@@ -203,11 +220,16 @@ export default function LuTool() {
             key={editorKey}
             initial={A.map((row, i) => [...row.map(String), ...(b ? [String(b[i])] : [])])}
             initialAugmented={b !== null}
-            submitLabel="Decompose"
+            submitLabel={t("Decompose", "Zerlegen")}
             onSubmit={(m, augmented) => {
               const Am = augmented ? m.map((row) => row.slice(0, -1)) : m;
               if (Am.length !== Am[0]?.length) {
-                setError(`LU decomposition needs a square matrix A — yours is ${Am.length}×${Am[0]?.length ?? 0}${augmented ? " (plus column b)" : ""}.`);
+                setError(
+                  t(
+                    `LU decomposition needs a square matrix A — yours is ${Am.length}×${Am[0]?.length ?? 0}${augmented ? " (plus column b)" : ""}.`,
+                    `Die LR-Zerlegung braucht eine quadratische Matrix A — deine ist ${Am.length}×${Am[0]?.length ?? 0}${augmented ? " (plus Spalte b)" : ""}.`,
+                  ),
+                );
                 return;
               }
               load(Am, augmented ? m.map((row) => row[row.length - 1]) : null, "custom");
@@ -228,9 +250,9 @@ export default function LuTool() {
       <section className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-lg font-semibold">
-            Step by step{" "}
+            {t("Step by step", "Schritt für Schritt")}{" "}
             <span className="text-sm font-normal text-muted">
-              ({Math.min(shown, total)} of {total})
+              ({Math.min(shown, total)} {t("of", "von")} {total})
             </span>
           </h2>
           <label className="flex items-center gap-2 text-sm">
@@ -245,7 +267,7 @@ export default function LuTool() {
                 setSolvedQuiz(new Set());
               }}
             />
-            🔮 Quiz: predict the multipliers l<sub>ij</sub> yourself
+            🔮 {t(<>Quiz: predict the multipliers l<sub>ij</sub> yourself</>, <>Quiz: Faktoren l<sub>ij</sub> selbst vorhersagen</>)}
           </label>
         </div>
 
@@ -284,14 +306,14 @@ export default function LuTool() {
               disabled={allShown}
               onClick={() => setShown((v) => v + 1)}
             >
-              Next step ▸
+              {t("Next step", "Nächster Schritt")} ▸
             </button>
           )}
           <button type="button" className={btn} disabled={allShown} onClick={() => setShown(total)}>
-            Show all
+            {t("Show all", "Alle zeigen")}
           </button>
           <button type="button" className={btn} disabled={shown <= start} onClick={() => setShown((v) => Math.max(start, v - 1))}>
-            ◂ Back
+            ◂ {t("Back", "Zurück")}
           </button>
           <button
             type="button"
@@ -302,7 +324,7 @@ export default function LuTool() {
               setSolvedQuiz(new Set());
             }}
           >
-            Start over
+            {t("Start over", "Von vorne")}
           </button>
         </div>
       </section>
@@ -312,25 +334,32 @@ export default function LuTool() {
   );
 }
 
-function stepTitle(step: LuStep): string {
+function stepTitle(step: LuStep, t: (en: string, de: string) => string): string {
   if (step.kind === "swap") {
-    return `Pivot in column ${step.column + 1} is 0 → swap rows ${step.rows[0] + 1} and ${step.rows[1] + 1}`;
+    return t(
+      `Pivot in column ${step.column + 1} is 0 → swap rows ${step.rows[0] + 1} and ${step.rows[1] + 1}`,
+      `Pivot in Spalte ${step.column + 1} ist 0 → Zeilen ${step.rows[0] + 1} und ${step.rows[1] + 1} tauschen`,
+    );
   }
-  return `Eliminate a${sub(step.i + 1)}${sub(step.j + 1)} with E${sub(step.i + 1)}${sub(step.j + 1)} (l${sub(step.i + 1)}${sub(step.j + 1)} = ${step.l})`;
+  const ij = `${sub(step.i + 1)}${sub(step.j + 1)}`;
+  return t(`Eliminate a${ij} with E${ij} (l${ij} = ${step.l})`, `a${ij} eliminieren mit E${ij} (l${ij} = ${step.l})`);
 }
 
 function StepBody({ step }: { step: LuStep }) {
+  const t = useT();
   if (step.kind === "swap") {
     const [r1, r2] = step.rows;
     return (
       <div className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center gap-3">
           <FracMatrixView m={step.P} label="P" tone={(i) => (i === r1 || i === r2 ? "accent" : undefined)} />
-          <FracMatrixView m={step.U} label="rows now" tone={(i) => (i === r1 || i === r2 ? "accent" : undefined)} />
+          <FracMatrixView m={step.U} label={t("rows now", "neue Zeilen")} tone={(i) => (i === r1 || i === r2 ? "accent" : undefined)} />
         </div>
         <p className="text-sm text-muted">
-          A pivot must not be 0. The permutation matrix P records the swap — what gets decomposed is P·A = L·U.
-          Multipliers already stored in L move along with their rows.
+          {t(
+            "A pivot must not be 0. The permutation matrix P records the swap — what gets decomposed is P·A = L·U. Multipliers already stored in L move along with their rows.",
+            "Das Pivotelement darf nicht 0 sein. Die Permutationsmatrix P merkt sich den Tausch — zerlegt wird dann P·A = L·U. Bereits berechnete Faktoren in L wandern mit ihren Zeilen.",
+          )}
         </p>
       </div>
     );
@@ -347,14 +376,15 @@ function StepBody({ step }: { step: LuStep }) {
       </div>
       <p className="font-mono text-sm">
         l{sub(i + 1)}{sub(j + 1)} = a{sub(i + 1)}{sub(j + 1)} / a{sub(j + 1)}{sub(j + 1)} = {String(before[i][j])} / {String(before[j][j])} ={" "}
-        <strong className="text-accent">{String(l)}</strong> → row {i + 1} − {String(l)} · row {j + 1}
+        <strong className="text-accent">{String(l)}</strong> → {t("row", "Zeile")} {i + 1} − {String(l)} · {t("row", "Zeile")} {j + 1}
       </p>
       <div className="flex flex-wrap items-center gap-3">
-        <FracMatrixView m={L} label="L so far" tone={(a, c) => (a === i && c === j ? "accent" : undefined)} />
+        <FracMatrixView m={L} label={t("L so far", "L bisher")} tone={(a, c) => (a === i && c === j ? "accent" : undefined)} />
         <p className="max-w-sm text-sm text-muted">
-          E{sub(i + 1)}{sub(j + 1)} has −l{sub(i + 1)}{sub(j + 1)} at position ({i + 1},{j + 1}). It is undone by L
-          {sub(i + 1)}
-          {sub(j + 1)} with +l{sub(i + 1)}{sub(j + 1)} — that is why the multiplier appears in L with a plus sign.
+          {t(
+            `E${sub(i + 1)}${sub(j + 1)} has −l${sub(i + 1)}${sub(j + 1)} at position (${i + 1},${j + 1}). It is undone by L${sub(i + 1)}${sub(j + 1)} with +l${sub(i + 1)}${sub(j + 1)} — that is why the multiplier appears in L with a plus sign.`,
+            `E${sub(i + 1)}${sub(j + 1)} hat −l${sub(i + 1)}${sub(j + 1)} an Position (${i + 1},${j + 1}). Rückgängig macht es L${sub(i + 1)}${sub(j + 1)} mit +l${sub(i + 1)}${sub(j + 1)} — deshalb landet der Faktor mit positivem Vorzeichen in L.`,
+          )}
         </p>
       </div>
     </div>
@@ -397,6 +427,7 @@ function SubstitutionBody({
 
 function QuizCard({ step, onSolved, onWrong }: { step: Extract<LuStep, { kind: "eliminate" }>; onSolved: (firstTry: boolean) => void; onWrong: () => void }) {
   const [value, setValue] = useState("");
+  const t = useT();
   const [tries, setTries] = useState(0);
   const [hint, setHint] = useState(false);
   const { i, j, before } = step;
@@ -415,8 +446,11 @@ function QuizCard({ step, onSolved, onWrong }: { step: Extract<LuStep, { kind: "
   return (
     <div className="flex flex-col gap-3 rounded-xl border-2 border-dashed border-accent/50 bg-accent/5 p-4">
       <p className="font-medium">
-        🔮 Next step: which multiplier l{sub(i + 1)}
-        {sub(j + 1)} eliminates the entry in row {i + 1}, column {j + 1}?
+        🔮{" "}
+        {t(
+          `Next step: which multiplier l${sub(i + 1)}${sub(j + 1)} eliminates the entry in row ${i + 1}, column ${j + 1}?`,
+          `Nächster Schritt: Welcher Faktor l${sub(i + 1)}${sub(j + 1)} eliminiert den Eintrag in Zeile ${i + 1}, Spalte ${j + 1}?`,
+        )}
       </p>
       <FracMatrixView m={before} tone={(a, c) => (a === i && c === j ? "danger" : a === j && c === j ? "success" : undefined)} />
       <div className="flex flex-wrap items-center gap-2">
@@ -427,22 +461,25 @@ function QuizCard({ step, onSolved, onWrong }: { step: Extract<LuStep, { kind: "
         <input
           autoFocus
           inputMode="text"
-          aria-label="Multiplier"
+          aria-label={t("Multiplier", "Faktor")}
           className={`h-9 w-24 rounded-md border bg-background px-2 text-center font-mono ${tries > 0 ? "border-danger" : "border-border"}`}
           value={value}
           onChange={(e) => setValue(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && check()}
         />
         <button type="button" className="rounded-md bg-accent px-3 py-1.5 text-sm font-medium text-accent-contrast" onClick={check}>
-          Check
+          {t("Check", "Prüfen")}
         </button>
         <button type="button" className="text-sm text-muted underline decoration-border underline-offset-2" onClick={() => onSolved(false)}>
-          Reveal
+          {t("Reveal", "Auflösen")}
         </button>
       </div>
       {hint && (
         <p className="text-sm text-danger">
-          Not yet. Hint: l = (entry to eliminate) / (pivot) = {String(before[i][j])} / {String(before[j][j])}.
+          {t(
+            `Not yet. Hint: l = (entry to eliminate) / (pivot) = ${before[i][j]} / ${before[j][j]}.`,
+            `Noch nicht. Tipp: l = (Eintrag, der verschwinden soll) / (Pivot) = ${before[i][j]} / ${before[j][j]}.`,
+          )}
         </p>
       )}
     </div>
@@ -450,24 +487,53 @@ function QuizCard({ step, onSolved, onWrong }: { step: Extract<LuStep, { kind: "
 }
 
 function Theory() {
+  const t = useT();
   return (
     <details className="rounded-xl border border-border p-4 text-sm">
-      <summary className="cursor-pointer font-semibold">Theory: LU decomposition / LR-Zerlegung (SW03)</summary>
+      <summary className="cursor-pointer font-semibold">{t("Theory: LU decomposition (SW03)", "Theorie: LR-Zerlegung (SW03)")}</summary>
       <ul className="mt-3 list-disc space-y-1.5 pl-5 text-muted">
         <li>
-          Every elimination step is a multiplication by an elimination matrix E<sub>ij</sub> (identity with −l<sub>ij</sub> at
-          position (i, j)). After all steps: E<sub>32</sub>E<sub>31</sub>E<sub>21</sub>A = U.
+          {t(
+            <>
+              Every elimination step is a multiplication by an elimination matrix E<sub>ij</sub> (identity with −l<sub>ij</sub>{" "}
+              at position (i, j)). After all steps: E<sub>32</sub>E<sub>31</sub>E<sub>21</sub>A = U.
+            </>,
+            <>
+              Jeder Eliminationsschritt ist eine Multiplikation mit einer Eliminationsmatrix E<sub>ij</sub> (Einheitsmatrix mit −l
+              <sub>ij</sub> an Position (i, j)). Nach allen Schritten gilt E<sub>32</sub>E<sub>31</sub>E<sub>21</sub>A = U.
+            </>,
+          )}
         </li>
         <li>
-          Hence A = (E<sub>32</sub>E<sub>31</sub>E<sub>21</sub>)<sup>−1</sup>U = L·U. The inverse L<sub>ij</sub> of a step
-          turns −l<sub>ij</sub> into +l<sub>ij</sub>; in L every multiplier l<sub>ij</sub> sits in row i, column j.
+          {t(
+            <>
+              Hence A = (E<sub>32</sub>E<sub>31</sub>E<sub>21</sub>)<sup>−1</sup>U = L·U. The inverse L<sub>ij</sub> of a step
+              turns −l<sub>ij</sub> into +l<sub>ij</sub>; in L every multiplier l<sub>ij</sub> sits in row i, column j.
+            </>,
+            <>
+              Daraus folgt A = (E<sub>32</sub>E<sub>31</sub>E<sub>21</sub>)<sup>−1</sup>U = L·U. Die Inverse L<sub>ij</sub>{" "}
+              eines Schritts erhält man, indem man −l<sub>ij</sub> in +l<sub>ij</sub> umwandelt; in L steht jeder Faktor l
+              <sub>ij</sub> in Zeile i, Spalte j.
+            </>,
+          )}
         </li>
-        <li>If a pivot is 0, rows are swapped: decompose P·A = L·U — and swap b to P·b as well.</li>
         <li>
-          Ax = b becomes L·y = b (forward substitution, from the top) and U·x = y (back substitution, from the bottom).
+          {t(
+            "If a pivot is 0, rows are swapped: decompose P·A = L·U — and swap b to P·b as well.",
+            "Ist ein Pivot 0, werden Zeilen vertauscht: Man zerlegt P·A = L·U und muss auch b zu P·b vertauschen.",
+          )}
         </li>
         <li>
-          Advantage: for many right-hand sides b with the same matrix A you decompose only once — every further solve is cheap.
+          {t(
+            "Ax = b becomes L·y = b (forward substitution, from the top) and U·x = y (back substitution, from the bottom).",
+            "Ax = b wird zu L·y = b (Vorwärtseinsetzen, von oben) und U·x = y (Rückwärtseinsetzen, von unten).",
+          )}
+        </li>
+        <li>
+          {t(
+            "Advantage: for many right-hand sides b with the same matrix A you decompose only once — every further solve is cheap.",
+            "Vorteil: Für viele rechte Seiten b mit derselben Matrix A muss nur einmal zerlegt werden — danach ist jedes Lösen billig.",
+          )}
         </li>
       </ul>
     </details>

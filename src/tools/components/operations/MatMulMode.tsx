@@ -7,6 +7,7 @@ import type { Matrix } from "@/lib/linalg/matrix";
 import { column, matVec, to3, type Vec3 } from "@/lib/linalg/vector";
 import Workspace from "./Workspace";
 import { Card, Legend, MatrixEditor, Paren, SizeSelect, columnColors, fmt, paren, parseGrid, resize } from "./ui";
+import { useT } from "@/lib/i18n/lang";
 
 const mul = (a: Matrix, b: Matrix): Matrix => a.map((row) => b[0].map((_, k) => row.reduce((s, x, j) => s + x * b[j][k], 0)));
 const same = (a: Matrix, b: Matrix) => a.length === b.length && a.every((row, i) => row.every((x, j) => Math.abs(x - b[i][j]) < 1e-9));
@@ -23,10 +24,10 @@ interface Preset {
 const presets: Preset[] = [
   { label: "Folie 4: (3×4)·(4×2)", A: [[4, -2, -2, 0], [-2, -7, 3, 8], [0, 1, -2, -1]], B: [[4, -5], [3, -1], [6, 4], [0, -3]], select: [1, 0] },
   { label: "Folie 8: E·A", A: [[1, 0], [0, 1]], B: [[2, 3], [4, -5]] },
-  { label: "Folie 15: P·A swaps rows", A: [[0, 1], [1, 0]], B: [[2, 3], [4, -5]] },
-  { label: "Folie 15: A·P swaps columns", A: [[2, 3], [4, -5]], B: [[0, 1], [1, 0]] },
+  { label: "Folie 15: P·A (rows / Zeilen)", A: [[0, 1], [1, 0]], B: [[2, 3], [4, -5]] },
+  { label: "Folie 15: A·P (columns / Spalten)", A: [[2, 3], [4, -5]], B: [[0, 1], [1, 0]] },
   { label: "AB ≠ BA", A: [[1, 1], [0, 1]], B: [[2, 0], [0, 1]] },
-  { label: "3D: rotate, then stretch", A: [[2, 0, 0], [0, 1, 0], [0, 0, 1]], B: [[0, -1, 0], [1, 0, 0], [0, 0, 1]] },
+  { label: "3D: rotate → stretch / drehen → strecken", A: [[2, 0, 0], [0, 1, 0], [0, 0, 1]], B: [[0, -1, 0], [1, 0, 0], [0, 0, 1]] },
 ];
 
 /** Faces of the unit square / cube mapped through `map`. */
@@ -50,6 +51,7 @@ function unitFaces(n: number, map: (v: number[]) => Vec3): Vec3[][] {
 
 export default function MatMulMode() {
   const [l, setL] = useState(3);
+  const t = useT();
   const [m, setM] = useState(4);
   const [n, setN] = useState(2);
   const [A, setA] = useState(() => str(presets[0].A));
@@ -128,12 +130,12 @@ export default function MatMulMode() {
   const content = (
     <>
       <Card
-        title="Input"
+        title={t("Input", "Eingabe")}
         aside={
           <div className="flex flex-wrap gap-3">
-            <SizeSelect label="A: rows l" value={l} onChange={(v) => resizeTo(v, m, n)} options={[1, 2, 3, 4]} />
-            <SizeSelect label="columns m" value={m} onChange={(v) => resizeTo(l, v, n)} options={[1, 2, 3, 4]} />
-            <SizeSelect label="B: columns n" value={n} onChange={(v) => resizeTo(l, m, v)} options={[1, 2, 3, 4]} />
+            <SizeSelect label={t("A: rows l", "A: Zeilen l")} value={l} onChange={(v) => resizeTo(v, m, n)} options={[1, 2, 3, 4]} />
+            <SizeSelect label={t("columns m", "Spalten m")} value={m} onChange={(v) => resizeTo(l, v, n)} options={[1, 2, 3, 4]} />
+            <SizeSelect label={t("B: columns n", "B: Spalten n")} value={n} onChange={(v) => resizeTo(l, m, v)} options={[1, 2, 3, 4]} />
           </div>
         }
       >
@@ -154,16 +156,19 @@ export default function MatMulMode() {
           <MatrixEditor name="B" color="var(--vec-b)" values={B} onChange={setB} />
         </div>
         <p className="text-xs text-muted">
-          A is ({l}×{m}), B is ({m}×{n}): the number of columns of A must equal the number of rows of B. AB is ({l}×{n}).
+          {t(
+            `A is (${l}×${m}), B is (${m}×${n}): the number of columns of A must equal the number of rows of B. AB is (${l}×${n}).`,
+            `A ist (${l}×${m}), B ist (${m}×${n}): die Spaltenzahl von A muss gleich der Zeilenzahl von B sein. AB ist (${l}×${n}).`,
+          )}
         </p>
       </Card>
 
-      <Card title="Computation">
+      <Card title={t("Computation", "Rechnung")}>
         {!Am || !Bm || !C ? (
-          <p className="text-sm text-danger">Please correct the highlighted entries.</p>
+          <p className="text-sm text-danger">{t("Please correct the highlighted entries.", "Bitte korrigiere die markierten Einträge.")}</p>
         ) : (
           <div className="flex flex-col gap-4">
-            <p className="text-sm text-muted">Click an entry of AB to see how it is computed.</p>
+            <p className="text-sm text-muted">{t("Click an entry of AB to see how it is computed.", "Klicke auf einen Eintrag von AB, um zu sehen, wie er berechnet wird.")}</p>
             <div className="flex flex-wrap items-center gap-2">
               {grid(Am, (i) => (i === si ? "bg-vec-a/20 font-semibold" : ""))}
               <span className="text-muted">·</span>
@@ -178,8 +183,16 @@ export default function MatMulMode() {
               <strong className="text-accent">{fmt(C[si][sk])}</strong>
             </p>
             <p className="text-sm text-muted">
-              Entry (i, k) of AB is the dot product of <span className="text-vec-a">row i of A</span> with{" "}
-              <span className="text-vec-b">column k of B</span>.
+              {t(
+                <>
+                  Entry (i, k) of AB is the dot product of <span className="text-vec-a">row i of A</span> with{" "}
+                  <span className="text-vec-b">column k of B</span>.
+                </>,
+                <>
+                  Eintrag (i, k) von AB ist das Skalarprodukt von <span className="text-vec-a">Zeile i von A</span> mit{" "}
+                  <span className="text-vec-b">Spalte k von B</span>.
+                </>,
+              )}
             </p>
 
             <div className="flex flex-col gap-2 border-t border-border pt-3">
@@ -189,12 +202,12 @@ export default function MatMulMode() {
                 aria-expanded={compare}
                 onClick={() => setCompare(!compare)}
               >
-                {compare ? "Hide B·A" : "Compare with B·A"}
+                {compare ? t("Hide B·A", "B·A ausblenden") : t("Compare with B·A", "Mit B·A vergleichen")}
               </button>
               {compare &&
                 (!baDefined ? (
                   <p className="text-sm">
-                    B·A is not even defined: B has {n} columns, A has {l} rows.
+                    {t(`B·A is not even defined: B has ${n} columns, A has ${l} rows.`, `B·A ist gar nicht definiert: B hat ${n} Spalten, A hat ${l} Zeilen.`)}
                   </p>
                 ) : (
                   BA && (
@@ -202,7 +215,7 @@ export default function MatMulMode() {
                       <span className="font-serif italic">BA =</span>
                       {grid(BA, () => "")}
                       <span className={`rounded-full px-3 py-1 text-sm font-medium ${commute ? "bg-success/10 text-success" : "bg-danger/10 text-danger"}`}>
-                        {commute ? "Here AB = BA — an exception!" : "AB ≠ BA — the order matters."}
+                        {commute ? t("Here AB = BA — an exception!", "Hier gilt AB = BA — eine Ausnahme!") : t("AB ≠ BA — the order matters.", "AB ≠ BA — die Reihenfolge zählt.")}
                       </span>
                     </div>
                   )
@@ -211,9 +224,9 @@ export default function MatMulMode() {
           </div>
         )}
         <ul className="list-disc space-y-1 pl-5 text-sm text-muted">
-          <li>In general AB ≠ BA, but the product is associative: (AB)C = A(BC).</li>
-          <li>As transformations, AB means: first apply B, then A.</li>
-          <li>E·A = A·E = A (identity); P·A swaps rows, A·P swaps columns.</li>
+          <li>{t("In general AB ≠ BA, but the product is associative: (AB)C = A(BC).", "Im Allgemeinen gilt AB ≠ BA, aber das Produkt ist assoziativ: (AB)C = A(BC).")}</li>
+          <li>{t("As transformations, AB means: first apply B, then A.", "Als Abbildungen bedeutet AB: zuerst B, dann A anwenden.")}</li>
+          <li>{t("E·A = A·E = A (identity); P·A swaps rows, A·P swaps columns.", "E·A = A·E = A (Einheitsmatrix); P·A vertauscht Zeilen, A·P vertauscht Spalten.")}</li>
         </ul>
       </Card>
     </>
@@ -224,8 +237,10 @@ export default function MatMulMode() {
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)]">
         <div className="flex min-w-0 flex-col gap-6">{content}</div>
         <p className="rounded-xl border border-dashed border-border p-6 text-sm text-muted">
-          The 3D picture is shown for square 2×2 or 3×3 matrices: there AB can be seen as a transformation — first B, then A.
-          Try the presets “AB ≠ BA” or “3D: rotate, then stretch”.
+          {t(
+            "The 3D picture is shown for square 2×2 or 3×3 matrices: there AB can be seen as a transformation — first B, then A. Try the presets “AB ≠ BA” or “3D: rotate → stretch”.",
+            "Das 3D-Bild erscheint für quadratische 2×2- oder 3×3-Matrizen: Dort ist AB eine Abbildung — zuerst B, dann A. Probier die Beispiele „AB ≠ BA“ oder „3D: drehen → strecken“.",
+          )}
         </p>
       </div>
     );
@@ -239,9 +254,9 @@ export default function MatMulMode() {
       legend={
         <Legend
           items={[
-            { color: "var(--muted)", label: n === 3 ? "unit cube" : "unit square", dashed: true },
-            { color: "var(--vec-b)", label: "after B", dashed: true },
-            { color: "var(--vec-res)", label: "after B, then A = AB" },
+            { color: "var(--muted)", label: n === 3 ? t("unit cube", "Einheitswürfel") : t("unit square", "Einheitsquadrat"), dashed: true },
+            { color: "var(--vec-b)", label: t("after B", "nach B"), dashed: true },
+            { color: "var(--vec-res)", label: t("after B, then A = AB", "nach B, dann A = AB") },
           ]}
         />
       }

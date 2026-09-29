@@ -2,6 +2,7 @@
 
 import { useRef, useState, type PointerEvent, type ReactNode } from "react";
 import type { Vec3 } from "@/lib/linalg/vector";
+import { useT } from "@/lib/i18n/lang";
 
 export type { Vec3 };
 
@@ -85,6 +86,7 @@ const fmtTick = (x: number) => Number(x.toFixed(4)).toString();
  */
 export default function Scene3D({ objects, view, minExtent = 1, children }: Scene3DProps) {
   const [camera, setCamera] = useState(DEFAULT_CAMERA);
+  const t = useT();
   const [zoom, setZoom] = useState(1);
   const drag = useRef<{ x: number; y: number } | null>(null);
 
@@ -277,7 +279,11 @@ export default function Scene3D({ objects, view, minExtent = 1, children }: Scen
         viewBox={`0 0 ${W} ${H}`}
         className={`block h-auto w-full select-none ${is3d ? "cursor-grab touch-none active:cursor-grabbing" : ""}`}
         role="img"
-        aria-label={is3d ? "3D view of the vectors. Drag to rotate." : "2D view of the vectors in the xy-plane."}
+        aria-label={
+          is3d
+            ? t("3D view of the vectors. Drag to rotate.", "3D-Ansicht der Vektoren. Zum Drehen ziehen.")
+            : t("2D view of the vectors in the xy-plane.", "2D-Ansicht der Vektoren in der xy-Ebene.")
+        }
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={() => (drag.current = null)}
@@ -293,10 +299,10 @@ export default function Scene3D({ objects, view, minExtent = 1, children }: Scen
       </svg>
 
       <div className="absolute right-2 top-2 flex gap-1">
-        <button type="button" className={btn} aria-label="Zoom in" onClick={() => setZoom((z) => Math.min(4, z * 1.25))}>
+        <button type="button" className={btn} aria-label={t("Zoom in", "Vergrössern")} onClick={() => setZoom((z) => Math.min(4, z * 1.25))}>
           +
         </button>
-        <button type="button" className={btn} aria-label="Zoom out" onClick={() => setZoom((z) => Math.max(0.25, z / 1.25))}>
+        <button type="button" className={btn} aria-label={t("Zoom out", "Verkleinern")} onClick={() => setZoom((z) => Math.max(0.25, z / 1.25))}>
           −
         </button>
         <button
@@ -307,11 +313,11 @@ export default function Scene3D({ objects, view, minExtent = 1, children }: Scen
             setZoom(1);
           }}
         >
-          Reset view
+          {t("Reset view", "Ansicht zurücksetzen")}
         </button>
       </div>
       {is3d && (
-        <p className="pointer-events-none absolute bottom-2 left-3 text-xs text-muted">Drag to rotate</p>
+        <p className="pointer-events-none absolute bottom-2 left-3 text-xs text-muted">{t("Drag to rotate", "Zum Drehen ziehen")}</p>
       )}
       {children}
     </div>

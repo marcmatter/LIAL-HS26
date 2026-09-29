@@ -1,6 +1,7 @@
 "use client";
 
 import type { DragEvent } from "react";
+import { useT } from "@/lib/i18n/lang";
 
 export interface Factor {
   numer: string;
@@ -20,9 +21,13 @@ interface FactorInputProps {
 
 /** A row factor entered as a stacked fraction: numerator over denominator. */
 export default function FactorInput({ row, factor, invalid, armedField, dragType, onChange, onArm }: FactorInputProps) {
+  const t = useT();
   const input = (field: FactorField) => (
     <input
-      aria-label={`Row ${row + 1} factor ${field === "numer" ? "numerator" : "denominator"}`}
+      aria-label={t(
+        `Row ${row + 1} factor ${field === "numer" ? "numerator" : "denominator"}`,
+        `Zeile ${row + 1} Faktor ${field === "numer" ? "Zähler" : "Nenner"}`,
+      )}
       inputMode="decimal"
       autoComplete="off"
       className={`h-6 w-16 rounded border bg-background px-1 text-center font-mono text-sm focus:outline-none focus:ring-2 focus:ring-accent ${
@@ -50,7 +55,7 @@ export default function FactorInput({ row, factor, invalid, armedField, dragType
   );
 
   return (
-    <div className="flex items-center gap-1.5" title="Row factor (drop a matrix entry here)">
+    <div className="flex items-center gap-1.5" title={t("Row factor (drop a matrix entry here)", "Zeilenfaktor (Matrixeintrag hierher ziehen)")}>
       <span className="text-muted" aria-hidden>
         ·
       </span>
