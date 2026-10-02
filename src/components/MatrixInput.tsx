@@ -1,5 +1,7 @@
 "use client";
 
+import { useT } from "@/lib/i18n/lang";
+
 interface MatrixInputProps {
   rows: number;
   cols: number;
@@ -10,6 +12,7 @@ interface MatrixInputProps {
 
 /** Editable grid of matrix entries. Entries are kept as strings so users can type "-", "1/3", etc. */
 export default function MatrixInput({ rows, cols, values, onChange, label }: MatrixInputProps) {
+  const t = useT();
   const update = (r: number, c: number, v: string) => {
     const next = values.map((row) => [...row]);
     next[r][c] = v;
@@ -28,7 +31,7 @@ export default function MatrixInput({ rows, cols, values, onChange, label }: Mat
             <input
               key={`${r}-${c}`}
               inputMode="decimal"
-              aria-label={`Row ${r + 1}, column ${c + 1}`}
+              aria-label={t(`Row ${r + 1}, column ${c + 1}`, `Zeile ${r + 1}, Spalte ${c + 1}`)}
               className="w-full rounded-md border border-border bg-surface px-2 py-1.5 text-center font-mono text-sm focus:outline-none focus:ring-2 focus:ring-accent"
               value={values[r]?.[c] ?? ""}
               onChange={(e) => update(r, c, e.target.value)}

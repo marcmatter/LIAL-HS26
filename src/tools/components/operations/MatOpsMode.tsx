@@ -22,6 +22,7 @@ import {
   parseNum,
   resize,
 } from "./ui";
+import { L, tr, useLang, useT, type L10n } from "@/lib/i18n/lang";
 
 type MatOp = "add" | "sub" | "scale";
 
@@ -42,25 +43,42 @@ const presets: Preset[] = [
 
 const str = (m: number[][]) => m.map((r) => r.map(String));
 
-const facts: Record<MatOp, string[]> = {
+const facts: Record<MatOp, L10n[]> = {
   add: [
-    "Entries in the same position (row, column) are added — both matrices must have the same size.",
-    "Column by column this is ordinary vector addition, as the picture shows.",
-    "A + B = B + A (commutative) and (A + B) + C = A + (B + C) (associative); the zero matrix is the neutral element.",
+    L(
+      "Entries in the same position (row, column) are added — both matrices must have the same size.",
+      "Einträge an derselben Stelle (Zeile, Spalte) werden addiert — beide Matrizen müssen gleich gross sein.",
+    ),
+    L(
+      "Column by column this is ordinary vector addition, as the picture shows.",
+      "Spaltenweise ist das gewöhnliche Vektoraddition, wie das Bild zeigt.",
+    ),
+    L(
+      "A + B = B + A (commutative) and (A + B) + C = A + (B + C) (associative); the zero matrix is the neutral element.",
+      "A + B = B + A (kommutativ) und (A + B) + C = A + (B + C) (assoziativ); die Nullmatrix ist das neutrale Element.",
+    ),
   ],
   sub: [
-    "A − B := A + (−1)·B: subtract entries in the same position.",
-    "Each column of A − B is the vector from the tip of a column of B to the tip of the matching column of A.",
-    "−A is the inverse of A with respect to addition: A + (−A) = 0.",
+    L("A − B := A + (−1)·B: subtract entries in the same position.", "A − B := A + (−1)·B: Einträge an derselben Stelle subtrahieren."),
+    L(
+      "Each column of A − B is the vector from the tip of a column of B to the tip of the matching column of A.",
+      "Jede Spalte von A − B ist der Vektor von der Spitze einer Spalte von B zur Spitze der passenden Spalte von A.",
+    ),
+    L("−A is the inverse of A with respect to addition: A + (−A) = 0.", "−A ist das Inverse von A bezüglich der Addition: A + (−A) = 0."),
   ],
   scale: [
-    "λ·A multiplies every entry of A by λ.",
-    "Every column is scaled by λ: |λ| > 1 stretches, |λ| < 1 shrinks, λ < 0 reverses the direction.",
+    L("λ·A multiplies every entry of A by λ.", "λ·A multipliziert jeden Eintrag von A mit λ."),
+    L(
+      "Every column is scaled by λ: |λ| > 1 stretches, |λ| < 1 shrinks, λ < 0 reverses the direction.",
+      "Jede Spalte wird mit λ skaliert: |λ| > 1 verlängert, |λ| < 1 verkürzt, λ < 0 kehrt die Richtung um.",
+    ),
   ],
 };
 
 export default function MatOpsMode() {
   const [rows, setRows] = useState(2);
+  const lang = useLang();
+  const t = useT();
   const [cols, setCols] = useState(2);
   const [A, setA] = useState(() => str(presets[0].A));
   const [B, setB] = useState(() => str(presets[0].B!));
@@ -125,9 +143,9 @@ export default function MatOpsMode() {
   const legend = (
     <Legend
       items={[
-        { color: "var(--foreground)", label: "aⱼ: columns of A (coloured by column)" },
-        ...(op === "scale" ? [] : [{ color: "var(--foreground)", label: op === "add" ? "bⱼ attached at the tip" : "−bⱼ attached at the tip", dashed: true }]),
-        { color: "var(--vec-res)", label: `cⱼ: columns of ${resultName}` },
+        { color: "var(--foreground)", label: t("aⱼ: columns of A (coloured by column)", "aⱼ: Spalten von A (nach Spalte gefärbt)") },
+        ...(op === "scale" ? [] : [{ color: "var(--foreground)", label: op === "add" ? t("bⱼ attached at the tip", "bⱼ an der Spitze angehängt") : t("−bⱼ attached at the tip", "−bⱼ an der Spitze angehängt"), dashed: true }]),
+        { color: "var(--vec-res)", label: t(`cⱼ: columns of ${resultName}`, `cⱼ: Spalten von ${resultName}`) },
       ]}
     />
   );
@@ -135,11 +153,11 @@ export default function MatOpsMode() {
   return (
     <Workspace key={rows} defaultView={rows === 3 ? "3d" : "2d"} objects={objects} legend={legend}>
       <Card
-        title="Input"
+        title={t("Input", "Eingabe")}
         aside={
           <div className="flex gap-3">
-            <SizeSelect label="Rows m" value={rows} onChange={(r) => resizeTo(r, cols)} />
-            <SizeSelect label="Columns n" value={cols} onChange={(c) => resizeTo(rows, c)} options={[1, 2, 3]} />
+            <SizeSelect label={t("Rows m", "Zeilen m")} value={rows} onChange={(r) => resizeTo(r, cols)} />
+            <SizeSelect label={t("Columns n", "Spalten n")} value={cols} onChange={(c) => resizeTo(rows, c)} options={[1, 2, 3]} />
           </div>
         }
       >
@@ -156,7 +174,7 @@ export default function MatOpsMode() {
           ))}
         </div>
         <Segmented
-          label="Operation"
+          label={t("Operation", "Operation")}
           value={op}
           onChange={setOp}
           options={[
@@ -175,9 +193,9 @@ export default function MatOpsMode() {
         </div>
       </Card>
 
-      <Card title="Computation">
+      <Card title={t("Computation", "Rechnung")}>
         {!valid || !result ? (
-          <p className="text-sm text-danger">Please correct the highlighted entries.</p>
+          <p className="text-sm text-danger">{t("Please correct the highlighted entries.", "Bitte korrigiere die markierten Einträge.")}</p>
         ) : (
           <Equation>
             <span className="font-mono text-sm">{resultName}</span>
@@ -189,7 +207,7 @@ export default function MatOpsMode() {
         )}
         <ul className="list-disc space-y-1 pl-5 text-sm text-muted">
           {facts[op].map((f) => (
-            <li key={f}>{f}</li>
+            <li key={f.en}>{tr(lang, f)}</li>
           ))}
         </ul>
       </Card>

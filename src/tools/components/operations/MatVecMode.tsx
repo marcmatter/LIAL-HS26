@@ -22,6 +22,7 @@ import {
   parseGrid,
   resize,
 } from "./ui";
+import { useT } from "@/lib/i18n/lang";
 
 type Picture = "columns" | "transform";
 
@@ -36,13 +37,13 @@ const s45 = "0.7071";
 
 const presets: Preset[] = [
   { label: "Folie 31: Ax = b", A: [[1, 2, 4], [3, 1, -1]], x: ["-3/5", "4/5", 0], picture: "columns" },
-  { label: "Stretch (2D)", A: [[2, 0], [0, 1]], x: [1, 2], picture: "transform" },
+  { label: "Stretch / Streckung (2D)", A: [[2, 0], [0, 1]], x: [1, 2], picture: "transform" },
   { label: "Rotation 45° (2D)", A: [[s45, `-${s45}`], [s45, s45]], x: [2, 1], picture: "transform" },
-  { label: "Shear", A: [[1, 1, 0], [0, 1, 0], [0, 0, 1]], x: [1, 2, 1], picture: "transform" },
-  { label: "Rotation 90° about z", A: [[0, -1, 0], [1, 0, 0], [0, 0, 1]], x: [2, 1, 1], picture: "transform" },
-  { label: "Scaling", A: [[2, 0, 0], [0, 0.5, 0], [0, 0, 1.5]], x: [1, 1, 1], picture: "transform" },
-  { label: "Reflection at xy-plane", A: [[1, 0, 0], [0, 1, 0], [0, 0, -1]], x: [1, 2, 2], picture: "transform" },
-  { label: "Projection onto xy-plane", A: [[1, 0, 0], [0, 1, 0], [0, 0, 0]], x: [1, 2, 2], picture: "transform" },
+  { label: "Shear / Scherung", A: [[1, 1, 0], [0, 1, 0], [0, 0, 1]], x: [1, 2, 1], picture: "transform" },
+  { label: "Rotation 90° (z)", A: [[0, -1, 0], [1, 0, 0], [0, 0, 1]], x: [2, 1, 1], picture: "transform" },
+  { label: "Scaling / Skalierung", A: [[2, 0, 0], [0, 0.5, 0], [0, 0, 1.5]], x: [1, 1, 1], picture: "transform" },
+  { label: "Reflection / Spiegelung (xy)", A: [[1, 0, 0], [0, 1, 0], [0, 0, -1]], x: [1, 2, 2], picture: "transform" },
+  { label: "Projection / Projektion (xy)", A: [[1, 0, 0], [0, 1, 0], [0, 0, 0]], x: [1, 2, 2], picture: "transform" },
 ];
 
 const str = (v: (number | string)[][]) => v.map((row) => row.map(String));
@@ -71,6 +72,8 @@ const sub = ["₁", "₂", "₃"];
 
 export default function MatVecMode() {
   const [rows, setRows] = useState(2);
+  // `t` is the animation parameter here, so the translation helper is `tt`.
+  const tt = useT();
   const [cols, setCols] = useState(3);
   const [A, setA] = useState(() => str(presets[0].A));
   const [x, setX] = useState(() => str(presets[0].x.map((v) => [v])));
@@ -161,15 +164,15 @@ export default function MatVecMode() {
     picture === "columns" ? (
       <Legend
         items={[
-          ...Array.from({ length: cols }, (_, j) => ({ color: columnColors[j], label: `x${sub[j]}·a${sub[j]} (column ${j + 1} of A)` })),
+          ...Array.from({ length: cols }, (_, j) => ({ color: columnColors[j], label: tt(`x${sub[j]}·a${sub[j]} (column ${j + 1} of A)`, `x${sub[j]}·a${sub[j]} (Spalte ${j + 1} von A)`) })),
           { color: "var(--vec-res)", label: "Ax" },
         ]}
       />
     ) : (
       <Legend
         items={[
-          { color: "var(--muted)", label: cols === 3 ? "unit cube" : "unit square", dashed: true },
-          { color: "var(--vec-res)", label: "its image under A" },
+          { color: "var(--muted)", label: cols === 3 ? tt("unit cube", "Einheitswürfel") : tt("unit square", "Einheitsquadrat"), dashed: true },
+          { color: "var(--vec-res)", label: tt("its image under A", "sein Bild unter A") },
           ...Array.from({ length: cols }, (_, j) => ({ color: columnColors[j], label: `Ae${sub[j]}` })),
           { color: "var(--vec-a)", label: "x" },
         ]}
@@ -188,7 +191,7 @@ export default function MatVecMode() {
             awardBadge("transformer");
           }}
         >
-          ▶ Animate
+          ▶ {tt("Animate", "Animieren")}
         </button>
         <label className="flex flex-1 items-center gap-2">
           <span className="text-muted">I</span>
@@ -197,7 +200,7 @@ export default function MatVecMode() {
             min={0}
             max={1}
             step={0.01}
-            aria-label="Interpolate from identity to A"
+            aria-label={tt("Interpolate from identity to A", "Übergang von der Einheitsmatrix zu A")}
             className="min-w-24 flex-1 accent-[var(--accent)]"
             value={t}
             onChange={(e) => {
@@ -220,22 +223,22 @@ export default function MatVecMode() {
       sceneControls={sceneControls}
       sceneHeader={
         <Segmented
-          label="Picture"
+          label={tt("Picture", "Darstellung")}
           value={picture}
           onChange={setPicture}
           options={[
-            { value: "columns", label: "Columns" },
-            { value: "transform", label: "Transformation" },
+            { value: "columns", label: tt("Columns", "Spalten") },
+            { value: "transform", label: tt("Transformation", "Abbildung") },
           ]}
         />
       }
     >
       <Card
-        title="Input"
+        title={tt("Input", "Eingabe")}
         aside={
           <div className="flex gap-3">
-            <SizeSelect label="Rows m" value={rows} onChange={(r) => resizeTo(r, cols)} />
-            <SizeSelect label="Columns n" value={cols} onChange={(c) => resizeTo(rows, c)} />
+            <SizeSelect label={tt("Rows m", "Zeilen m")} value={rows} onChange={(r) => resizeTo(r, cols)} />
+            <SizeSelect label={tt("Columns n", "Spalten n")} value={cols} onChange={(c) => resizeTo(rows, c)} />
           </div>
         }
       >
@@ -257,13 +260,13 @@ export default function MatVecMode() {
         </div>
       </Card>
 
-      <Card title="Computation">
+      <Card title={tt("Computation", "Rechnung")}>
         {!valid || !Ax ? (
-          <p className="text-sm text-danger">Please correct the highlighted entries.</p>
+          <p className="text-sm text-danger">{tt("Please correct the highlighted entries.", "Bitte korrigiere die markierten Einträge.")}</p>
         ) : (
           <div className="flex flex-col gap-5">
             <div className="flex flex-col gap-2">
-              <h3 className="text-sm font-medium text-muted">Row by row: entry i is (row i of A) • x</h3>
+              <h3 className="text-sm font-medium text-muted">{tt("Row by row: entry i is (row i of A) • x", "Zeile für Zeile: Eintrag i ist (Zeile i von A) • x")}</h3>
               <Equation>
                 <span className="font-mono text-sm">Ax</span>
                 <Sym>=</Sym>
@@ -275,7 +278,9 @@ export default function MatVecMode() {
               </Equation>
             </div>
             <div className="flex flex-col gap-2">
-              <h3 className="text-sm font-medium text-muted">Column by column: Ax is a linear combination of the columns of A</h3>
+              <h3 className="text-sm font-medium text-muted">
+                {tt("Column by column: Ax is a linear combination of the columns of A", "Spalte für Spalte: Ax ist eine Linearkombination der Spalten von A")}
+              </h3>
               <Equation>
                 <span className="font-mono text-sm">Ax</span>
                 <Sym>=</Sym>
@@ -292,16 +297,23 @@ export default function MatVecMode() {
             </div>
             <div className="text-sm text-muted">
               <p>
-                A is a ({rows}×{cols})-matrix, so it maps vectors of ℝ{cols === 2 ? "²" : "³"} to vectors of ℝ
-                {rows === 2 ? "²" : "³"}. Its j-th column is the image of the j-th basis vector: Ae{sub[0]} is column 1, and so
-                on.
+                {tt(
+                  `A is a (${rows}×${cols})-matrix, so it maps vectors of ℝ${cols === 2 ? "²" : "³"} to vectors of ℝ${rows === 2 ? "²" : "³"}. Its j-th column is the image of the j-th basis vector: Ae${sub[0]} is column 1, and so on.`,
+                  `A ist eine (${rows}×${cols})-Matrix, bildet also Vektoren aus ℝ${cols === 2 ? "²" : "³"} auf Vektoren in ℝ${rows === 2 ? "²" : "³"} ab. Die j-te Spalte ist das Bild des j-ten Basisvektors: Ae${sub[0]} ist Spalte 1 usw.`,
+                )}
               </p>
               {det !== null && (
                 <p className="mt-2">
                   det A = <span className="font-mono text-foreground">{fmt(det)}</span>:{" "}
                   {Math.abs(det) < 1e-9
-                    ? `A squashes the unit ${cols === 3 ? "cube" : "square"} flat — information is lost, so A is not invertible.`
-                    : `${cols === 3 ? "volumes" : "areas"} are scaled by |det A| = ${fmt(Math.abs(det))}${det < 0 ? ", and the orientation is flipped (mirror image)" : ""}.`}
+                    ? tt(
+                        `A squashes the unit ${cols === 3 ? "cube" : "square"} flat — information is lost, so A is not invertible.`,
+                        `A drückt ${cols === 3 ? "den Einheitswürfel" : "das Einheitsquadrat"} flach — Information geht verloren, also ist A nicht invertierbar.`,
+                      )
+                    : tt(
+                        `${cols === 3 ? "volumes" : "areas"} are scaled by |det A| = ${fmt(Math.abs(det))}${det < 0 ? ", and the orientation is flipped (mirror image)" : ""}.`,
+                        `${cols === 3 ? "Volumen" : "Flächen"} werden mit |det A| = ${fmt(Math.abs(det))} skaliert${det < 0 ? ", und die Orientierung kehrt sich um (Spiegelbild)" : ""}.`,
+                      )}
                 </p>
               )}
             </div>

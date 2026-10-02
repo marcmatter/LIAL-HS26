@@ -6,17 +6,24 @@ import { Fraction } from "@/lib/linalg/fraction";
 import { difficultyFor, generateExercise, pointsFor, topics, type Exercise } from "@/lib/game/exercises";
 import { masteryStars, recordAnswer, recordSprint, useProgress, type Topic } from "@/lib/game/progress";
 import { MatrixView, Paren, fmt } from "@/tools/components/operations/ui";
+import { L, tr, useLang, useT, type L10n } from "@/lib/i18n/lang";
 
 const SPRINT_SECONDS = 60;
 
-const exploreLinks: Partial<Record<Topic, { href: string; label: string }>> = {
-  "vec-add": { href: "/tools/operations", label: "See it in 3D" },
-  "vec-comb": { href: "/tools/operations", label: "See it in 3D" },
-  dot: { href: "/tools/operations", label: "See it in 3D" },
-  "mat-add": { href: "/tools/operations", label: "See it in 3D" },
-  "mat-vec": { href: "/tools/operations", label: "See it in 3D" },
-  det: { href: "/tools/determinant", label: "Determinant tool" },
-  system: { href: "/tools/gaussian-elimination", label: "Gauss-Jordan tool" },
+const in3d = L("See it in 3D", "In 3D ansehen");
+const special = L("Special matrices", "Spezielle Matrizen");
+const exploreLinks: Partial<Record<Topic, { href: string; label: L10n }>> = {
+  "vec-add": { href: "/tools/operations", label: in3d },
+  "vec-comb": { href: "/tools/operations", label: in3d },
+  dot: { href: "/tools/operations", label: in3d },
+  "mat-add": { href: "/tools/operations", label: in3d },
+  "mat-vec": { href: "/tools/operations", label: in3d },
+  det: { href: "/tools/determinant", label: L("Determinant tool", "Determinanten-Werkzeug") },
+  system: { href: "/tools/gaussian-elimination", label: L("Gauss-Jordan tool", "Gauss-Jordan-Werkzeug") },
+  "mat-mul": { href: "/tools/operations", label: L("Matrix × matrix tool", "Matrix × Matrix") },
+  transpose: { href: "/tools/operations", label: special },
+  inverse: { href: "/tools/operations", label: special },
+  lu: { href: "/tools/lu-decomposition", label: L("LU decomposition tool", "LR-Zerlegung") },
 };
 
 type Phase = "answering" | "correct" | "revealed";
@@ -32,6 +39,8 @@ const close = (a: number, b: number) => Math.abs(a - b) <= 1e-9 * Math.max(1, Ma
 
 export default function PracticeSession({ topic, sprint, onExit }: { topic: Topic; sprint: boolean; onExit: () => void }) {
   const progress = useProgress();
+  const lang = useLang();
+  const t = useT();
   const stats = progress.topics[topic];
   const info = topics.find((t) => t.id === topic)!;
 
@@ -42,7 +51,7 @@ export default function PracticeSession({ topic, sprint, onExit }: { topic: Topi
   const [tries, setTries] = useState(0);
   const [hint, setHint] = useState(false);
   const [wrong, setWrong] = useState<Set<string>>(new Set());
-  const [message, setMessage] = useState<string | null>(null);
+  const [message, setMessage] = useState<L10n | null>(null);
   const [shakeKey, setShakeKey] = useState(0);
   const [round, setRound] = useState(0);
 
@@ -84,7 +93,7 @@ export default function PracticeSession({ topic, sprint, onExit }: { topic: Topi
     if (phase !== "answering" || finished) return;
     const values = inputs.map((row) => row.map(parseAnswer));
     if (values.some((row) => row.some((v) => v === null))) {
-      setMessage("Enter a number in every field (fractions like 3/4 are fine).");
+      setMessage(L("Enter a number in every field (fractions like 3/4 are fine).", "Gib in jedes Feld eine Zahl ein (Brüche wie 3/4 sind erlaubt)."));
       return;
     }
     const bad = new Set<string>();
@@ -114,8 +123,8 @@ export default function PracticeSession({ topic, sprint, onExit }: { topic: Topi
       setTries(1);
       setMessage(
         bad.size === 1 && exercise.answer.flat().length > 1
-          ? "Almost! One entry is wrong — it is highlighted. Try again."
-          : "Not quite. The wrong entries are highlighted — try again, or use a hint.",
+          ? L("Almost! One entry is wrong — it is highlighted. Try again.", "Fast! Ein Eintrag ist falsch — er ist markiert. Versuch es nochmal.")
+          : L("Not quite. The wrong entries are highlighted — try again, or use a hint.", "Noch nicht ganz. Die falschen Einträge sind markiert — versuch es nochmal oder nimm einen Tipp."),
       );
     }
   }
@@ -138,10 +147,10 @@ export default function PracticeSession({ topic, sprint, onExit }: { topic: Topi
           {score >= 8 ? "🏆" : score >= 4 ? "🎉" : "⏱️"}
         </p>
         <h2 className="text-2xl font-bold">
-          {score} correct in {SPRINT_SECONDS} seconds
+          {t(`${score} correct in ${SPRINT_SECONDS} seconds`, `${score} richtig in ${SPRINT_SECONDS} Sekunden`)}
         </h2>
         <p className="text-muted">
-          {score >= best && score > 0 ? "New personal best!" : `Your best: ${best}`} · +{score * 5} XP
+          {score >= best && score > 0 ? t("New personal best!", "Neuer persönlicher Rekord!") : t(`Your best: ${best}`, `Dein Rekord: ${best}`)} · +{score * 5} XP
         </p>
         <div className="flex gap-2">
           <button
@@ -156,10 +165,10 @@ export default function PracticeSession({ topic, sprint, onExit }: { topic: Topi
               next();
             }}
           >
-            Play again
+            {t("Play again", "Nochmal spielen")}
           </button>
           <button type="button" className="rounded-lg border border-border px-4 py-2 hover:border-accent" onClick={onExit}>
-            All topics
+            {t("All topics", "Alle Themen")}
           </button>
         </div>
       </div>
@@ -170,16 +179,16 @@ export default function PracticeSession({ topic, sprint, onExit }: { topic: Topi
     <div className="flex flex-col gap-4" onKeyDown={onKeyDown}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <button type="button" className="text-sm text-muted hover:text-foreground" onClick={onExit}>
-          ← All topics
+          ← {t("All topics", "Alle Themen")}
         </button>
         <div className="flex flex-wrap items-center gap-2 text-sm">
           <span className="rounded-lg border border-border px-3 py-1">
-            {info.icon} {info.title}
+            {info.icon} {tr(lang, info.title)}
           </span>
-          <span className="rounded-lg border border-border px-3 py-1" title="Difficulty grows as you master the topic">
+          <span className="rounded-lg border border-border px-3 py-1" title={t("Difficulty grows as you master the topic", "Die Schwierigkeit steigt mit deiner Meisterschaft")}>
             Level {exercise.difficulty}/3
           </span>
-          <span className="rounded-lg border border-border px-3 py-1" title="Mastery">
+          <span className="rounded-lg border border-border px-3 py-1" title={t("Mastery", "Meisterschaft")}>
             <span className="text-accent">{"★".repeat(stars)}</span>
             <span className="text-muted">{"☆".repeat(3 - stars)}</span>
           </span>
@@ -191,7 +200,7 @@ export default function PracticeSession({ topic, sprint, onExit }: { topic: Topi
               <span className="rounded-lg bg-accent/10 px-3 py-1 font-semibold">✓ {score}</span>
             </>
           ) : (
-            <span className="rounded-lg border border-border px-3 py-1" title="Correct first-try answers in a row">
+            <span className="rounded-lg border border-border px-3 py-1" title={t("Correct first-try answers in a row", "Richtige Antworten im ersten Versuch in Folge")}>
               🔥 {stats?.streak ?? 0}
             </span>
           )}
@@ -199,7 +208,7 @@ export default function PracticeSession({ topic, sprint, onExit }: { topic: Topi
       </div>
 
       <section className="flex flex-col gap-5 rounded-xl border border-border p-5">
-        <h2 className="text-lg font-semibold">{exercise.task}</h2>
+        <h2 className="text-lg font-semibold">{tr(lang, exercise.task)}</h2>
 
         <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
           {exercise.given.map((g) => (
@@ -230,28 +239,32 @@ export default function PracticeSession({ topic, sprint, onExit }: { topic: Topi
           />
         </div>
 
-        {message && <p className="text-sm text-danger">{message}</p>}
+        {message && <p className="text-sm text-danger">{tr(lang, message)}</p>}
         {hint && phase === "answering" && (
-          <p className="rounded-lg border border-accent/30 bg-accent/5 px-3 py-2 text-sm">💡 {exercise.hint}</p>
+          <p className="rounded-lg border border-accent/30 bg-accent/5 px-3 py-2 text-sm">💡 {tr(lang, exercise.hint)}</p>
         )}
 
         {phase === "correct" && !sprint && (
           <p className="rounded-lg border border-success/40 bg-success/10 px-3 py-2 font-medium text-success">
-            ✓ Correct!{" "}
-            {tries === 0 && !hint ? "First try — streak +1." : tries > 0 ? "Got it on the second try." : "Well done."}
+            ✓ {t("Correct!", "Richtig!")}{" "}
+            {tries === 0 && !hint
+              ? t("First try — streak +1.", "Im ersten Versuch — Serie +1.")
+              : tries > 0
+                ? t("Got it on the second try.", "Im zweiten Versuch geschafft.")
+                : t("Well done.", "Gut gemacht.")}
           </p>
         )}
         {phase === "revealed" && (
           <div className="flex flex-col gap-2 rounded-lg border border-danger/30 bg-danger/5 px-3 py-3 text-sm">
-            <p className="font-medium text-danger">Here is the solution:</p>
+            <p className="font-medium text-danger">{t("Here is the solution:", "So geht die Lösung:")}</p>
             <div className="flex flex-wrap items-center gap-2">
               <span className="font-serif italic">{exercise.answerLabel}</span>
               <span className="text-muted">=</span>
               {scalar ? <span className="font-mono">{fmt(exercise.answer[0][0])}</span> : <MatrixView cells={exercise.answer} />}
             </div>
             <ul className="flex flex-col gap-1 font-mono text-xs text-muted">
-              {exercise.solution.map((line) => (
-                <li key={line}>{line}</li>
+              {exercise.solution.map((line, i) => (
+                <li key={i}>{tr(lang, line)}</li>
               ))}
             </ul>
           </div>
@@ -262,11 +275,11 @@ export default function PracticeSession({ topic, sprint, onExit }: { topic: Topi
             {phase === "answering" ? (
               <>
                 <button type="button" className="rounded-lg bg-accent px-4 py-2 font-medium text-accent-contrast hover:opacity-90" onClick={check}>
-                  Check <kbd className="ml-1 hidden text-xs opacity-70 sm:inline">↵</kbd>
+                  {t("Check", "Prüfen")} <kbd className="ml-1 hidden text-xs opacity-70 sm:inline">↵</kbd>
                 </button>
                 {!hint && (
                   <button type="button" className="rounded-lg border border-border px-4 py-2 hover:border-accent" onClick={() => setHint(true)}>
-                    💡 Hint <span className="text-xs text-muted">(½ XP)</span>
+                    💡 {t("Hint", "Tipp")} <span className="text-xs text-muted">(½ XP)</span>
                   </button>
                 )}
                 <button
@@ -277,24 +290,24 @@ export default function PracticeSession({ topic, sprint, onExit }: { topic: Topi
                     setPhase("revealed");
                   }}
                 >
-                  Show solution
+                  {t("Show solution", "Lösung zeigen")}
                 </button>
               </>
             ) : (
               <button type="button" autoFocus className="rounded-lg bg-accent px-4 py-2 font-medium text-accent-contrast hover:opacity-90" onClick={next}>
-                Next exercise ▸
+                {t("Next exercise", "Nächste Aufgabe")} ▸
               </button>
             )}
             {exploreLinks[topic] && (
               <Link href={exploreLinks[topic]!.href} className="ml-auto text-sm text-muted underline decoration-border underline-offset-2 hover:text-foreground">
-                {exploreLinks[topic]!.label} →
+                {tr(lang, exploreLinks[topic]!.label)} →
               </Link>
             )}
           </div>
         )}
         {sprint && phase === "answering" && (
           <button type="button" className="self-start rounded-lg bg-accent px-4 py-2 font-medium text-accent-contrast hover:opacity-90" onClick={check}>
-            Check <kbd className="ml-1 text-xs opacity-70">↵</kbd>
+            {t("Check", "Prüfen")} <kbd className="ml-1 text-xs opacity-70">↵</kbd>
           </button>
         )}
       </section>
@@ -317,6 +330,7 @@ function AnswerGrid({
   scalar: boolean;
   shake: boolean;
 }) {
+  const t = useT();
   const cols = inputs[0]?.length ?? 1;
   const cell = (r: number, c: number) => {
     const isWrong = wrong.has(`${r}-${c}`);
@@ -327,7 +341,7 @@ function AnswerGrid({
         autoFocus={r === 0 && c === 0}
         inputMode="decimal"
         autoComplete="off"
-        aria-label={scalar ? "Your answer" : `Answer row ${r + 1}, column ${c + 1}`}
+        aria-label={scalar ? t("Your answer", "Deine Antwort") : t(`Answer row ${r + 1}, column ${c + 1}`, `Antwort Zeile ${r + 1}, Spalte ${c + 1}`)}
         aria-invalid={isWrong}
         readOnly={phase !== "answering"}
         className={`h-10 ${scalar ? "w-28" : "w-16"} rounded-md border px-1 text-center font-mono focus:outline-none focus:ring-2 focus:ring-accent ${state}`}

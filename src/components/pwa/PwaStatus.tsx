@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { useOnline } from "./useOnline";
 // Imported for its side effect: catch the browser's install prompt on every page.
 import "./installPrompt";
+import { useT } from "@/lib/i18n/lang";
 
 type Toast = { kind: "ready" } | { kind: "updated" } | null;
 type CheckState = "idle" | "checking" | "downloading" | "latest" | "failed";
@@ -28,6 +29,7 @@ export default function PwaStatus() {
   const [toast, setToast] = useState<Toast>(null);
   const [check, setCheck] = useState<CheckState>("idle");
   const [supported, setSupported] = useState(false);
+  const t = useT();
 
   useEffect(() => {
     pathRef.current = pathname;
@@ -97,11 +99,11 @@ export default function PwaStatus() {
   }
 
   const checkLabel: Record<CheckState, string> = {
-    idle: "Check for updates",
-    checking: "Checking…",
-    downloading: "Downloading new version…",
-    latest: "✓ Up to date",
-    failed: "Check failed — try again",
+    idle: t("Check for updates", "Nach Updates suchen"),
+    checking: t("Checking…", "Suche…"),
+    downloading: t("Downloading new version…", "Neue Version wird geladen…"),
+    latest: t("✓ Up to date", "✓ Aktuell"),
+    failed: t("Check failed — try again", "Suche fehlgeschlagen — erneut versuchen"),
   };
 
   return (
@@ -119,7 +121,7 @@ export default function PwaStatus() {
         {supported && (
           <>
             <span aria-hidden>·</span>
-            <span>{online ? "Available offline" : "Offline — using saved version"}</span>
+            <span>{online ? t("Available offline", "Offline verfügbar") : t("Offline — using saved version", "Offline — gespeicherte Version")}</span>
             {online && (
               <button
                 type="button"
@@ -141,8 +143,8 @@ export default function PwaStatus() {
         >
           <span className="flex-1">
             {toast.kind === "ready"
-              ? "LIAL is saved on this device and now works offline."
-              : "A new version with updated math helpers is ready."}
+              ? t("LIAL is saved on this device and now works offline.", "LIAL ist auf diesem Gerät gespeichert und funktioniert jetzt offline.")
+              : t("A new version with updated math helpers is ready.", "Eine neue Version mit aktualisierten Mathe-Helfern ist bereit.")}
           </span>
           {toast.kind === "updated" && (
             <button
@@ -150,10 +152,10 @@ export default function PwaStatus() {
               className="rounded-md bg-accent px-3 py-1.5 font-medium text-accent-contrast hover:opacity-90"
               onClick={() => window.location.reload()}
             >
-              Reload
+              {t("Reload", "Neu laden")}
             </button>
           )}
-          <button type="button" aria-label="Dismiss" className="px-1 text-muted hover:text-foreground" onClick={() => setToast(null)}>
+          <button type="button" aria-label={t("Dismiss", "Schliessen")} className="px-1 text-muted hover:text-foreground" onClick={() => setToast(null)}>
             ✕
           </button>
         </div>

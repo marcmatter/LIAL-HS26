@@ -36,11 +36,18 @@ src/
 - **Practice Arena** — endless generated exercises for the SW01 topics (vector addition,
   linear combinations, dot product, length, matrix addition, matrix × vector, determinant,
   linear systems) with instant checking, hints and worked solutions. Difficulty adapts to
-  your mastery; each topic also has a 60-second sprint.
+  your mastery; each topic also has a 60-second sprint. SW03 adds matrix multiplication,
+  transpose, inverse and LU decomposition.
 - **Vector & Matrix Operations (3D)** — vector addition, scalar multiplication, linear
   combinations and the dot product; matrix × vector (as a combination of columns and as a
   transformation of space); matrix addition and scalar multiplication. Every result is
   computed step by step and drawn in a rotatable 3D (or 2D) view.
+  Since SW03 also **matrix × matrix** (click an entry of AB to see row · column, AB vs. BA,
+  AB as "first B, then A" in 3D) and **special matrices**: identity, transpose, inverse
+  (with the null vector of a singular matrix) and permutation matrices (P·A vs. A·P).
+- **LU Decomposition (LR-Zerlegung)** — PA = LU step by step with elimination matrices E_ij,
+  row swaps when a pivot is 0, then Ax = b by forward and back substitution; exact
+  fractions, lecture examples (Folie 18/19/24/26) and a quiz mode for the multipliers l_ij.
 - **Determinant**
 - **Gauss-Jordan (interactive)** — row-reduce with your own row operations, exact fractions.
 
@@ -51,6 +58,15 @@ src/
 2. Register it in `src/tools/registry.ts`.
 
 The tool page at `/tools/<slug>` and the home page card are generated automatically.
+
+## Languages
+
+The whole app is available in **English and German** — switch with **EN | DE** in the header.
+The choice is stored in `localStorage` (`lial-lang`); without a stored choice the browser
+language decides, and all open tabs switch together. Texts live next to their translation:
+`t("English", "Deutsch")` in components (`useT()` from `src/lib/i18n/lang.ts`) and
+`L("English", "Deutsch")` for data such as the tool registry, exercises and badges
+(`src/lib/i18n/text.ts`).
 
 ## Gamification
 

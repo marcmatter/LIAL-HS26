@@ -1,6 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
+import { L, type L10n } from "@/lib/i18n/text";
 import { badgeById } from "./badges";
 
 /**
@@ -9,7 +10,19 @@ import { badgeById } from "./badges";
  * per device.
  */
 
-export type Topic = "vec-add" | "vec-comb" | "dot" | "length" | "mat-add" | "mat-vec" | "det" | "system";
+export type Topic =
+  | "vec-add"
+  | "vec-comb"
+  | "dot"
+  | "length"
+  | "mat-add"
+  | "mat-vec"
+  | "det"
+  | "system"
+  | "mat-mul"
+  | "transpose"
+  | "inverse"
+  | "lu";
 
 export interface TopicStats {
   attempts: number;
@@ -32,25 +45,38 @@ export interface Progress {
 }
 
 export type Reward =
-  | { kind: "xp"; amount: number; reason: string }
+  | { kind: "xp"; amount: number; reason: L10n }
   | { kind: "badge"; id: string }
-  | { kind: "level"; level: number; title: string };
+  | { kind: "level"; level: number; title: L10n };
 
 const KEY = "lial-progress-v1";
 const EMPTY: Progress = { xp: 0, days: [], topics: {}, badges: {}, challenges: {} };
-export const ALL_TOPICS: Topic[] = ["vec-add", "vec-comb", "dot", "length", "mat-add", "mat-vec", "det", "system"];
+export const ALL_TOPICS: Topic[] = [
+  "vec-add",
+  "vec-comb",
+  "dot",
+  "length",
+  "mat-add",
+  "mat-vec",
+  "det",
+  "system",
+  "mat-mul",
+  "transpose",
+  "inverse",
+  "lu",
+];
 
 // ---- levels ------------------------------------------------------------------
 
-const LEVELS = [
-  { xp: 0, title: "Scalar" },
-  { xp: 100, title: "Vector" },
-  { xp: 250, title: "Linear Combination" },
-  { xp: 500, title: "Matrix" },
-  { xp: 900, title: "Basis" },
-  { xp: 1400, title: "Determinant" },
-  { xp: 2000, title: "Eigenvector" },
-  { xp: 2800, title: "Vector-Space Master" },
+const LEVELS: { xp: number; title: L10n }[] = [
+  { xp: 0, title: L("Scalar", "Skalar") },
+  { xp: 100, title: L("Vector", "Vektor") },
+  { xp: 250, title: L("Linear Combination", "Linearkombination") },
+  { xp: 500, title: L("Matrix", "Matrix") },
+  { xp: 900, title: L("Basis", "Basis") },
+  { xp: 1400, title: L("Determinant", "Determinante") },
+  { xp: 2000, title: L("Eigenvector", "Eigenvektor") },
+  { xp: 2800, title: L("Vector-Space Master", "Vektorraum-Meister") },
 ];
 
 export function levelInfo(xp: number) {
@@ -191,7 +217,7 @@ export function recordAnswer(topic: Topic, correct: boolean, points: number, fir
   p = { ...p, topics: { ...p.topics, [topic]: stats } };
   if (correct) {
     p = { ...p, xp: p.xp + points };
-    rewards.push({ kind: "xp", amount: points, reason: "Correct!" });
+    rewards.push({ kind: "xp", amount: points, reason: L("Correct!", "Richtig!") });
     p = withToday(p, rewards);
     p = withBadge(p, "first-steps", rewards);
     if (streak >= 5) p = withBadge(p, "on-a-roll", rewards);
@@ -227,7 +253,7 @@ export function recordChallenge(key: string, steps: number, par: number): number
   if (stars > previous) {
     const xp = (stars - previous) * 20;
     p = { ...p, xp: p.xp + xp, challenges: { ...p.challenges, [key]: stars } };
-    rewards.push({ kind: "xp", amount: xp, reason: `${"★".repeat(stars)} challenge solved` });
+    rewards.push({ kind: "xp", amount: xp, reason: L(`${"★".repeat(stars)} challenge solved`, `${"★".repeat(stars)} Challenge gelöst`) });
     p = withToday(p, rewards);
   }
   write(p, rewards);

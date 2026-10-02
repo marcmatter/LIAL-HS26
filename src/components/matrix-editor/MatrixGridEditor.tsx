@@ -3,6 +3,7 @@
 import { useRef, useState, useSyncExternalStore, type ClipboardEvent, type KeyboardEvent } from "react";
 import { Fraction } from "@/lib/linalg/fraction";
 import { tokenizeMatrix, type FracMatrix } from "@/lib/linalg/rowOps";
+import { useT } from "@/lib/i18n/lang";
 
 const MAX_ROWS = 8;
 const MAX_COLS = 9;
@@ -57,7 +58,7 @@ export default function MatrixGridEditor({
   initial,
   initialAugmented,
   current,
-  submitLabel = "Load matrix",
+  submitLabel,
   onSubmit,
   onCancel,
 }: MatrixGridEditorProps) {
@@ -66,6 +67,7 @@ export default function MatrixGridEditor({
   const [focus, setFocus] = useState<{ r: number; c: number } | null>(null);
   const [nativeKeyboard, setNativeKeyboard] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const t = useT();
   const refs = useRef(new Map<string, HTMLInputElement>());
   // A freshly focused cell looks fully selected, so the first keypad key replaces its value.
   const fresh = useRef(false);
@@ -110,7 +112,12 @@ export default function MatrixGridEditor({
   function submit() {
     const parsed = cells.map((row) => row.map(parseCell));
     if (parsed.some((row) => row.some((x) => x === null))) {
-      setError(`${invalidCount} ${invalidCount === 1 ? "entry is" : "entries are"} not a number — see the red cells.`);
+      setError(
+        t(
+          `${invalidCount} ${invalidCount === 1 ? "entry is" : "entries are"} not a number — see the red cells.`,
+          `${invalidCount} ${invalidCount === 1 ? "Eintrag ist" : "Einträge sind"} keine Zahl — siehe die roten Felder.`,
+        ),
+      );
       return;
     }
     onSubmit(parsed as FracMatrix, augmented && cols > 1);
@@ -206,9 +213,25 @@ export default function MatrixGridEditor({
     <div className="flex flex-col gap-4">
       {/* Size & fill controls */}
       <div className="flex flex-wrap items-center gap-x-5 gap-y-3 text-sm">
-        <Stepper label="Rows" value={rows} min={1} max={MAX_ROWS} onChange={(r) => setSize(r, cols)} />
-        <Stepper label="Columns" value={cols} min={1} max={MAX_COLS} onChange={(c) => setSize(rows, c)} />
-        <div className="flex flex-wrap gap-1" role="group" aria-label="Quick sizes">
+        <Stepper
+          label={t("Rows", "Zeilen")}
+          less={t("Fewer rows", "Weniger Zeilen")}
+          more={t("More rows", "Mehr Zeilen")}
+          value={rows}
+          min={1}
+          max={MAX_ROWS}
+          onChange={(r) => setSize(r, cols)}
+        />
+        <Stepper
+          label={t("Columns", "Spalten")}
+          less={t("Fewer columns", "Weniger Spalten")}
+          more={t("More columns", "Mehr Spalten")}
+          value={cols}
+          min={1}
+          max={MAX_COLS}
+          onChange={(c) => setSize(rows, c)}
+        />
+        <div className="flex flex-wrap gap-1" role="group" aria-label={t("Quick sizes", "Schnellgrössen")}>
           {SIZES.map(([r, c]) => (
             <button
               key={`${r}x${c}`}
@@ -226,7 +249,7 @@ export default function MatrixGridEditor({
         <label className="flex items-center gap-2">
           <input type="checkbox" className="h-4 w-4 accent-[var(--accent)]" checked={augmented} onChange={(e) => setAugmented(e.target.checked)} />
           <span>
-            Augmented <span className="text-muted">(A | b)</span>
+            {t("Augmented", "Erweitert")} <span className="text-muted">(A | b)</span>
           </span>
         </label>
       </div>
@@ -237,7 +260,7 @@ export default function MatrixGridEditor({
           className="inline-grid gap-x-1.5 gap-y-1.5"
           style={{ gridTemplateColumns: `auto repeat(${cols}, 4.25rem)` }}
           role="grid"
-          aria-label={`Matrix editor, ${rows} by ${cols}`}
+          aria-label={t(`Matrix editor, ${rows} by ${cols}`, `Matrix-Editor, ${rows} mal ${cols}`)}
         >
           <span />
           {Array.from({ length: cols }, (_, c) => (
@@ -245,7 +268,7 @@ export default function MatrixGridEditor({
               key={c}
               className={`text-center font-serif text-sm italic text-muted ${divider !== null && c === divider ? "border-l-2 border-foreground/40" : ""}`}
             >
-              {divider === null ? `col ${c + 1}` : c < divider ? `x${sub(c + 1)}` : cols - divider === 1 ? "b" : `b${sub(c - divider + 1)}`}
+              {divider === null ? `${t("col", "Sp.")} ${c + 1}` : c < divider ? `x${sub(c + 1)}` : cols - divider === 1 ? "b" : `b${sub(c - divider + 1)}`}
             </span>
           ))}
           {cells.map((row, r) => (
@@ -268,9 +291,9 @@ export default function MatrixGridEditor({
                     autoComplete="off"
                     autoCorrect="off"
                     spellCheck={false}
-                    aria-label={`Row ${r + 1}, column ${c + 1}`}
+                    aria-label={t(`Row ${r + 1}, column ${c + 1}`, `Zeile ${r + 1}, Spalte ${c + 1}`)}
                     aria-invalid={bad}
-                    title={bad ? "Not a number. Use e.g. 3, -2, 0.5 or 3/4." : undefined}
+                    title={bad ? t("Not a number. Use e.g. 3, -2, 0.5 or 3/4.", "Keine Zahl. Verwende z. B. 3, -2, 0.5 oder 3/4.") : undefined}
                     className={`h-10 w-full rounded-md border px-1 text-center font-mono text-sm focus:outline-none focus:ring-2 focus:ring-accent ${
                       bad
                         ? "border-danger bg-danger/10"
@@ -296,7 +319,7 @@ export default function MatrixGridEditor({
       </div>
 
       {keypad && focus && (
-        <div className="grid max-w-sm grid-cols-5 gap-1.5 rounded-xl border border-border bg-surface p-2" role="group" aria-label="Number pad">
+        <div className="grid max-w-sm grid-cols-5 gap-1.5 rounded-xl border border-border bg-surface p-2" role="group" aria-label={t("Number pad", "Ziffernblock")}>
           {["7", "8", "9", "⌫", "←", "4", "5", "6", "±", "→", "1", "2", "3", "/", ".", "0"].map((k) => (
             <button
               key={k}
@@ -304,7 +327,15 @@ export default function MatrixGridEditor({
               // Keep focus (and the caret) in the cell while tapping keys.
               onPointerDown={(e) => e.preventDefault()}
               onClick={() => press(k)}
-              aria-label={{ "⌫": "Delete", "±": "Change sign", "←": "Previous cell", "→": "Next cell", "/": "Fraction bar" }[k] ?? k}
+              aria-label={
+                {
+                  "⌫": t("Delete", "Löschen"),
+                  "±": t("Change sign", "Vorzeichen wechseln"),
+                  "←": t("Previous cell", "Vorheriges Feld"),
+                  "→": t("Next cell", "Nächstes Feld"),
+                  "/": t("Fraction bar", "Bruchstrich"),
+                }[k] ?? k
+              }
               className={`h-11 rounded-lg border border-border text-lg font-medium active:bg-accent/20 ${/\d/.test(k) ? "bg-background" : "bg-surface"}`}
             >
               {k === "±" ? "+/−" : k}
@@ -316,12 +347,12 @@ export default function MatrixGridEditor({
             onClick={() => press("next")}
             className="col-span-3 h-11 rounded-lg bg-accent font-medium text-accent-contrast"
           >
-            Next ↵
+            {t("Next", "Weiter")} ↵
           </button>
           <button
             type="button"
             className="col-span-1 h-11 rounded-lg border border-border text-sm text-muted"
-            aria-label="Use the system keyboard"
+            aria-label={t("Use the system keyboard", "Systemtastatur verwenden")}
             onClick={() => setNativeKeyboard(true)}
           >
             ⌨
@@ -335,53 +366,80 @@ export default function MatrixGridEditor({
           className="inline-flex h-9 items-center rounded-md bg-accent px-4 text-sm font-medium text-accent-contrast transition hover:opacity-90"
           onClick={submit}
         >
-          {submitLabel}
+          {submitLabel ?? t("Load matrix", "Matrix laden")}
         </button>
         {onCancel && (
           <button type="button" className={`${small} h-9`} onClick={onCancel}>
-            Cancel
+            {t("Cancel", "Abbrechen")}
           </button>
         )}
         <span className="mx-1 hidden h-5 w-px bg-border sm:block" aria-hidden />
         <button type="button" className={small} onClick={() => fill("clear")}>
-          Clear
+          {t("Clear", "Leeren")}
         </button>
         <button type="button" className={small} onClick={() => fill("identity")}>
-          Identity
+          {t("Identity", "Einheitsmatrix")}
         </button>
         <button type="button" className={small} onClick={() => fill("random")}>
-          Random
+          {t("Random", "Zufällig")}
         </button>
         {current && (
           <button type="button" className={small} onClick={() => fill("current")}>
-            Use current state
+            {t("Use current state", "Aktuellen Stand übernehmen")}
           </button>
         )}
         {error && <span className="text-sm text-danger">{error}</span>}
       </div>
 
       <p className="text-xs text-muted">
-        Empty cells count as 0. Enter decimals or fractions like <code>-3/4</code>. Tip: paste a whole matrix into any cell — from
-        Excel, a Jupyter notebook (<code>[[2, -3], [5, -7]]</code>) or plain text.{" "}
-        <span className="hidden sm:inline">Arrow keys move between cells, Enter goes to the next one, Ctrl+Enter loads.</span>
+        {t(
+          <>
+            Empty cells count as 0. Enter decimals or fractions like <code>-3/4</code>. Tip: paste a whole matrix into any cell —
+            from Excel, a Jupyter notebook (<code>[[2, -3], [5, -7]]</code>) or plain text.{" "}
+            <span className="hidden sm:inline">Arrow keys move between cells, Enter goes to the next one, Ctrl+Enter loads.</span>
+          </>,
+          <>
+            Leere Felder zählen als 0. Gib Dezimalzahlen oder Brüche wie <code>-3/4</code> ein. Tipp: Füge eine ganze Matrix in ein
+            beliebiges Feld ein — aus Excel, einem Jupyter-Notebook (<code>[[2, -3], [5, -7]]</code>) oder als Text.{" "}
+            <span className="hidden sm:inline">
+              Pfeiltasten wechseln das Feld, Enter springt zum nächsten, Ctrl+Enter lädt.
+            </span>
+          </>,
+        )}
       </p>
     </div>
   );
 }
 
-function Stepper({ label, value, min, max, onChange }: { label: string; value: number; min: number; max: number; onChange: (n: number) => void }) {
+function Stepper({
+  label,
+  less,
+  more,
+  value,
+  min,
+  max,
+  onChange,
+}: {
+  label: string;
+  less: string;
+  more: string;
+  value: number;
+  min: number;
+  max: number;
+  onChange: (n: number) => void;
+}) {
   const b = "flex h-8 w-8 items-center justify-center text-lg transition hover:bg-accent/10 disabled:opacity-30";
   return (
     <div className="flex items-center gap-2">
       <span className="text-muted">{label}</span>
       <div className="inline-flex items-center overflow-hidden rounded-md border border-border">
-        <button type="button" className={b} aria-label={`Fewer ${label.toLowerCase()}`} disabled={value <= min} onClick={() => onChange(value - 1)}>
+        <button type="button" className={b} aria-label={less} disabled={value <= min} onClick={() => onChange(value - 1)}>
           −
         </button>
         <span className="w-7 text-center font-mono" aria-live="polite">
           {value}
         </span>
-        <button type="button" className={b} aria-label={`More ${label.toLowerCase()}`} disabled={value >= max} onClick={() => onChange(value + 1)}>
+        <button type="button" className={b} aria-label={more} disabled={value >= max} onClick={() => onChange(value + 1)}>
           +
         </button>
       </div>

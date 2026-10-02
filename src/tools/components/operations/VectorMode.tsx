@@ -22,6 +22,7 @@ import {
   parseNum,
   resize,
 } from "./ui";
+import { L, tr, useLang, useT, type L10n } from "@/lib/i18n/lang";
 
 type VectorOp = "add" | "sub" | "scale" | "lincomb" | "dot";
 
@@ -33,12 +34,27 @@ const ops: { value: VectorOp; label: string }[] = [
   { value: "dot", label: "a • b" },
 ];
 
-const explanations: Record<VectorOp, string> = {
-  add: "Move b so that its tail sits on the tip of a. The sum a + b runs from the tail of a to the tip of the moved b — the diagonal of the parallelogram spanned by a and b. Numerically: add the components.",
-  sub: "a − b = a + (−1)·b. If a and b start at the same point, a − b is the vector from the tip of b to the tip of a.",
-  scale: "λ·a multiplies every component by λ. |λ| > 1 stretches, |λ| < 1 shrinks, and a negative λ reverses the direction. Try the slider!",
-  lincomb: "A linear combination scales each vector and adds the results: λ·a + μ·b. Geometrically: walk along λ·a, then along μ·b.",
-  dot: "a • b = a₁b₁ + a₂b₂ (+ a₃b₃) = |a|·|b|·cos φ. It is 0 exactly when a ⊥ b. The dashed line drops b perpendicularly onto a (projection).",
+const explanations: Record<VectorOp, L10n> = {
+  add: L(
+    "Move b so that its tail sits on the tip of a. The sum a + b runs from the tail of a to the tip of the moved b — the diagonal of the parallelogram spanned by a and b. Numerically: add the components.",
+    "Verschiebe b so, dass sein Fusspunkt an der Spitze von a liegt. Die Summe a + b führt vom Fusspunkt von a zur Spitze des verschobenen b — die Diagonale des von a und b aufgespannten Parallelogramms. Rechnerisch: Komponenten addieren.",
+  ),
+  sub: L(
+    "a − b = a + (−1)·b. If a and b start at the same point, a − b is the vector from the tip of b to the tip of a.",
+    "a − b = a + (−1)·b. Liegen die Fusspunkte von a und b am selben Ort, ist a − b der Vektor von der Spitze von b zur Spitze von a.",
+  ),
+  scale: L(
+    "λ·a multiplies every component by λ. |λ| > 1 stretches, |λ| < 1 shrinks, and a negative λ reverses the direction. Try the slider!",
+    "λ·a multipliziert jede Komponente mit λ. |λ| > 1 verlängert, |λ| < 1 verkürzt, ein negatives λ kehrt die Richtung um. Probier den Schieberegler!",
+  ),
+  lincomb: L(
+    "A linear combination scales each vector and adds the results: λ·a + μ·b. Geometrically: walk along λ·a, then along μ·b.",
+    "Eine Linearkombination skaliert jeden Vektor und addiert die Ergebnisse: λ·a + μ·b. Geometrisch: erst entlang λ·a, dann entlang μ·b.",
+  ),
+  dot: L(
+    "a • b = a₁b₁ + a₂b₂ (+ a₃b₃) = |a|·|b|·cos φ. It is 0 exactly when a ⊥ b. The dashed line drops b perpendicularly onto a (projection).",
+    "a • b = a₁b₁ + a₂b₂ (+ a₃b₃) = |a|·|b|·cos φ. Es ist genau dann 0, wenn a ⊥ b. Die gestrichelte Linie fällt das Lot von b auf a (Projektion).",
+  ),
 };
 
 interface Preset {
@@ -57,13 +73,15 @@ const presets: Preset[] = [
   { label: "Folie 15: a − b", dim: 2, a: [4, 3], b: [1, 2], op: "sub" },
   { label: "a ⊥ b (Folie 36)", dim: 2, a: [2, 1], b: [-1, 2], op: "dot" },
   { label: "3D: 2a − b", dim: 3, a: [1, 2, 1], b: [3, -1, 2], op: "lincomb", lambda: "2", mu: "-1" },
-  { label: "3D: angle", dim: 3, a: [4, 2, 9], b: [3, 1, 6], op: "dot" },
+  { label: "3D: angle / Winkel", dim: 3, a: [4, 2, 9], b: [3, 1, 6], op: "dot" },
 ];
 
 const toStrings = (v: number[]) => v.map((x) => [String(x)]);
 
 export default function VectorMode() {
   const [dim, setDim] = useState(2);
+  const lang = useLang();
+  const t = useT();
   const [a, setA] = useState(() => toStrings(presets[0].a));
   const [b, setB] = useState(() => toStrings(presets[0].b));
   const [lambda, setLambda] = useState("3");
@@ -221,14 +239,14 @@ export default function VectorMode() {
       items={[
         { color: "var(--vec-a)", label: "a" },
         ...(usesB ? [{ color: "var(--vec-b)", label: "b" }] : []),
-        { color: "var(--vec-res)", label: op === "dot" ? "projection of b onto a" : "result" },
+        { color: "var(--vec-res)", label: op === "dot" ? t("projection of b onto a", "Projektion von b auf a") : t("result", "Ergebnis") },
       ]}
     />
   );
 
   return (
     <Workspace key={dim} defaultView={dim === 3 ? "3d" : "2d"} objects={objects} legend={legend}>
-      <Card title="Input" aside={<SizeSelect label="Dimension" value={dim} onChange={changeDim} />}>
+      <Card title={t("Input", "Eingabe")} aside={<SizeSelect label={t("Dimension", "Dimension")} value={dim} onChange={changeDim} />}>
         <div className="flex flex-wrap gap-2">
           {presets.map((p) => (
             <button
@@ -241,7 +259,7 @@ export default function VectorMode() {
             </button>
           ))}
         </div>
-        <Segmented label="Operation" value={op} onChange={setOp} options={ops} />
+        <Segmented label={t("Operation", "Operation")} value={op} onChange={setOp} options={ops} />
         <div className="flex flex-wrap items-center gap-6">
           <MatrixEditor name="a" color="var(--vec-a)" values={a} onChange={setA} />
           {usesB && <MatrixEditor name="b" color="var(--vec-b)" values={b} onChange={setB} />}
@@ -254,9 +272,9 @@ export default function VectorMode() {
         )}
       </Card>
 
-      <Card title="Computation">
+      <Card title={t("Computation", "Rechnung")}>
         {!valid ? (
-          <p className="text-sm text-danger">Please correct the highlighted entries.</p>
+          <p className="text-sm text-danger">{t("Please correct the highlighted entries.", "Bitte korrigiere die markierten Einträge.")}</p>
         ) : op === "dot" && dotInfo ? (
           <div className="flex flex-col gap-3 font-mono text-sm">
             <p>
@@ -270,7 +288,7 @@ export default function VectorMode() {
               |b| = √({bv.map((x) => `${paren(x)}²`).join(" + ")}) = {fmt(dotInfo.nb)}
             </p>
             {dotInfo.phi === null ? (
-              <p className="text-muted">The angle is undefined for the zero vector.</p>
+              <p className="text-muted">{t("The angle is undefined for the zero vector.", "Für den Nullvektor ist der Winkel nicht definiert.")}</p>
             ) : (
               <>
                 <p>
@@ -284,7 +302,7 @@ export default function VectorMode() {
             )}
             {Math.abs(dotInfo.d) < 1e-9 && (
               <p className="self-start rounded-full bg-success/10 px-3 py-1 font-sans font-medium text-success">
-                a • b = 0 → a and b are orthogonal (a ⊥ b)
+                {t("a • b = 0 → a and b are orthogonal (a ⊥ b)", "a • b = 0 → a und b sind orthogonal (a ⊥ b)")}
               </p>
             )}
           </div>
@@ -299,12 +317,12 @@ export default function VectorMode() {
                 <MatrixView cells={asColumn(result)} color="var(--vec-res)" highlight />
               </Equation>
               <p className="font-mono text-sm text-muted">
-                length: |result| = {fmt(norm(result))}
+                {t("length", "Länge")}: |{t("result", "Ergebnis")}| = {fmt(norm(result))}
               </p>
             </div>
           )
         )}
-        <p className="text-sm text-muted">{explanations[op]}</p>
+        <p className="text-sm text-muted">{tr(lang, explanations[op])}</p>
       </Card>
     </Workspace>
   );
@@ -312,6 +330,7 @@ export default function VectorMode() {
 
 function ScalarSlider({ name, value, onChange }: { name: string; value: string; onChange: (v: string) => void }) {
   const n = parseNum(value);
+  const t = useT();
   return (
     <div className="flex flex-wrap items-center gap-3">
       <NumberField name={name} value={value} onChange={onChange} />
@@ -320,7 +339,7 @@ function ScalarSlider({ name, value, onChange }: { name: string; value: string; 
         min={-3}
         max={3}
         step={0.1}
-        aria-label={`${name} slider`}
+        aria-label={`${name} ${t("slider", "Schieberegler")}`}
         className="w-48 accent-[var(--accent)]"
         value={n ?? 0}
         onChange={(e) => onChange(e.target.value)}

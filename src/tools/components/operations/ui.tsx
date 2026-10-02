@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import { Fraction } from "@/lib/linalg/fraction";
 import { formatNumber, type Matrix } from "@/lib/linalg/matrix";
+import { useT } from "@/lib/i18n/lang";
 
 /** Parses "3", "-2.5" or "1/3"; an empty field counts as 0. Returns null when invalid. */
 export function parseNum(s: string): number | null {
@@ -68,6 +69,7 @@ interface MatrixEditorProps {
 }
 
 export function MatrixEditor({ name, color, values, onChange, colorColumns }: MatrixEditorProps) {
+  const t = useT();
   const cols = values[0]?.length ?? 0;
   return (
     <div className="inline-flex items-center gap-2">
@@ -85,7 +87,7 @@ export function MatrixEditor({ name, color, values, onChange, colorColumns }: Ma
                   key={`${r}-${c}`}
                   inputMode="decimal"
                   autoComplete="off"
-                  aria-label={`${name}: row ${r + 1}, column ${c + 1}`}
+                  aria-label={t(`${name}: row ${r + 1}, column ${c + 1}`, `${name}: Zeile ${r + 1}, Spalte ${c + 1}`)}
                   aria-invalid={invalid}
                   className={`h-8 w-14 rounded-md border bg-background px-1 text-center font-mono text-sm focus:outline-none focus:ring-2 focus:ring-accent ${
                     invalid ? "border-danger" : "border-border"
